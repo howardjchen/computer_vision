@@ -7,6 +7,10 @@
 #include <opencv2/nonfree/nonfree.hpp>
 #include <opencv2/nonfree/features2d.hpp>
 
+//#include <opencv2/imgcodecs.hpp> // imread
+#include <opencv2/core/core.hpp> // imread
+#include <opencv2/highgui/highgui.hpp> // imshow, waitKey
+
 #include <math.h>
 #include <cmath>
 #include <limits.h>
@@ -15,7 +19,10 @@
 #include <fstream>
 
 #define K_KNN 4  // k for KNN
-#define RANSAC_DISTANCE 100
+#define RANSAC_DISTANCE 5
+
+#define OBJECT_IMG "object_11.bmp"
+#define TARGET_IMG "object_12.bmp"
  
 using namespace std;
 using namespace cv;
@@ -74,11 +81,9 @@ int main(  )
     int diff_vector = 0;
     int KeyPoint_Neighborhood[991][1250];
     int K_NearestNeighbor[991][K_KNN];
-    FILE *fp1, *fp2;
-    fp1 = fopen("index.txt","w");
 
-    Mat tmp = cv::imread( "object_11.bmp", 1 );
-    Mat in = cv::imread( "object_12.bmp", 1 );
+    Mat ObjectImage = cv::imread( OBJECT_IMG, 1 );  //type : 8UC3
+    Mat TargetImage = cv::imread( TARGET_IMG, 1 );
  
     /* threshold      = 0.04;
        edge_threshold = 10.0;
@@ -90,13 +95,13 @@ int main(  )
  
     // Feature detection
 	std::vector<cv::KeyPoint> keypoints1, keypoints2;
-    detector.detect( tmp, keypoints1 );
-    detector.detect( in, keypoints2 );
+    detector.detect( ObjectImage, keypoints1 );
+    detector.detect( TargetImage, keypoints2 );
  
     // Feature display
     Mat feat1,feat2;
-    drawKeypoints(tmp,keypoints1,feat1,Scalar(255, 255, 255),DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-    drawKeypoints(in,keypoints2,feat2,Scalar(255, 255, 255),DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    drawKeypoints(ObjectImage,keypoints1,feat1,Scalar(255, 255, 255),DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    drawKeypoints(TargetImage,keypoints2,feat2,Scalar(255, 255, 255),DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
     imwrite( "feat1.bmp", feat1 );
     imwrite( "feat2.bmp", feat2 );
 
@@ -107,8 +112,8 @@ int main(  )
  
     // Feature descriptor computation
     Mat descriptor1,descriptor2;
-    extractor.compute( tmp, keypoints1, descriptor1 );
-    extractor.compute( in, keypoints2, descriptor2 );
+    extractor.compute( ObjectImage, keypoints1, descriptor1 );
+    extractor.compute( TargetImage, keypoints2, descriptor2 );
 
     printf("Descriptor1=(%d,%d)\n", descriptor1.size().height,descriptor1.size().width);
     printf("Descriptor2=(%d,%d)\n", descriptor2.size().height,descriptor2.size().width);
@@ -215,8 +220,12 @@ int main(  )
     //std::vector<Point2d> Object[key2];
     double Object_X, Object_Y;
     double Target_X, Target_Y;
+    double distance;
 
-    for (int i = 0; i < 1; ++i)
+    int Max_InlierNumber = 0;
+    int Max_InlierIndex = 0;
+
+    for (int i = 0; i < 256; ++i)
     {
         for (int j = 0; j < key1; j++)
         {
@@ -236,25 +245,56 @@ int main(  )
             {
                 Object_X = keypoints2[k].pt.x;
                 Object_Y = keypoints2[k].pt.y;
+                distance = ComputeDistance(Target_X,Target_Y,Object_X,Object_Y);
+                //printf("distance = %f \n",distance );
 
-                if (ComputeDistance(Target_X,Target_Y,Object_X,Object_Y) < RANSAC_DISTANCE)
+                if (distance < RANSAC_DISTANCE)
                 {
                     H_InlierNumber[i]++;
+                    break;
                 }
             }
-
-
             /*********************************************************/
         }
-    }
 
+        if (H_InlierNumber[i] > Max_InlierNumber)
+        {
+            Max_InlierNumber = H_InlierNumber[i];
+            Max_InlierIndex = i;
+        }
+        //printf("H_InlierNumber[%d] = %d\n",i,H_InlierNumber[i]);
+    }
     //cout << TargetKeypoint[0] << endl; 
     //cout << TargetKeypoint[0].at<double>(1,0) << endl;
     //cout << Object[0] << endl;
-    printf("H_InlierNumber[0] = %d\n",H_InlierNumber[0]);
+    //printf("the max H[%d] = %d\n",Max_InlierIndex,Max_InlierNumber );
+
+    Mat Reconvered_H(H[Max_InlierIndex]);
+    int ObjectImage_row, ObjectImage_col;
+
+    ObjectImage_row = ObjectImage.rows;
+    ObjectImage_col = ObjectImage.cols;
+
+    Mat WarpingImage = Mat::zeros(708, 1024,CV_8UC3);
+    //WarpingImage.create(ObjectImage.rows, ObjectImage.cols,ObjectImage.type());
+    //Mat WarpingImage = TargetImage.clone();
+    //Mat WarpingImage;
+    //Mat WarpingImage(ObjectImage.rows, ObjectImage.cols,ObjectImage.type());
 
 
+    printf("object : row = %d, col = %d\n",ObjectImage.rows, ObjectImage.cols );
+    printf("warping : row = %d, col = %d\n",WarpingImage.rows, WarpingImage.cols );
 
+    for (int i = 0; i <= ObjectImage.rows-1 ; i++)     //rows
+    {
+        for (int j = 0; j <= ObjectImage.cols-1; j++) //cols
+        {
+            WarpingImage.at<Vec3b>(i,j) = ObjectImage.at<Vec3b>(i,j);
+        }
+    }
+
+    imshow("objectimg",ObjectImage);
+    imshow("Warping",WarpingImage);
     waitKey(0);
 
     return 0;
