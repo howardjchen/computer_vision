@@ -4,7 +4,7 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_CXX
-  "/home/howard/Documents/computer_vision/CV_HW2/SIFT_opencv2.4x.cpp" "/home/howard/Documents/computer_vision/CV_HW2/build/CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o"
+  "/home/howard/Documents/computer_vision/CV_HW2/main.cpp" "/home/howard/Documents/computer_vision/CV_HW2/build/CMakeFiles/hw2.dir/main.cpp.o"
   )
 SET(CMAKE_CXX_COMPILER_ID "GNU")
 

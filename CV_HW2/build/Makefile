@@ -114,29 +114,29 @@ hw2/fast:
 	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/build
 .PHONY : hw2/fast
 
-SIFT_opencv2.4x.o: SIFT_opencv2.4x.cpp.o
-.PHONY : SIFT_opencv2.4x.o
+main.o: main.cpp.o
+.PHONY : main.o
 
 # target to build an object file
-SIFT_opencv2.4x.cpp.o:
-	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o
-.PHONY : SIFT_opencv2.4x.cpp.o
+main.cpp.o:
+	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/main.cpp.o
+.PHONY : main.cpp.o
 
-SIFT_opencv2.4x.i: SIFT_opencv2.4x.cpp.i
-.PHONY : SIFT_opencv2.4x.i
+main.i: main.cpp.i
+.PHONY : main.i
 
 # target to preprocess a source file
-SIFT_opencv2.4x.cpp.i:
-	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.i
-.PHONY : SIFT_opencv2.4x.cpp.i
+main.cpp.i:
+	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/main.cpp.i
+.PHONY : main.cpp.i
 
-SIFT_opencv2.4x.s: SIFT_opencv2.4x.cpp.s
-.PHONY : SIFT_opencv2.4x.s
+main.s: main.cpp.s
+.PHONY : main.s
 
 # target to generate assembly for a file
-SIFT_opencv2.4x.cpp.s:
-	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.s
-.PHONY : SIFT_opencv2.4x.cpp.s
+main.cpp.s:
+	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/main.cpp.s
+.PHONY : main.cpp.s
 
 # Help Target
 help:
@@ -147,9 +147,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... hw2"
 	@echo "... rebuild_cache"
-	@echo "... SIFT_opencv2.4x.o"
-	@echo "... SIFT_opencv2.4x.i"
-	@echo "... SIFT_opencv2.4x.s"
+	@echo "... main.o"
+	@echo "... main.i"
+	@echo "... main.s"
 .PHONY : help
 
 

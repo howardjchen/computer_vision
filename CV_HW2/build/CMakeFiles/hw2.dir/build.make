@@ -52,64 +52,73 @@ include CMakeFiles/hw2.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/hw2.dir/flags.make
 
-CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o: CMakeFiles/hw2.dir/flags.make
-CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o: ../SIFT_opencv2.4x.cpp
+CMakeFiles/hw2.dir/main.cpp.o: CMakeFiles/hw2.dir/flags.make
+CMakeFiles/hw2.dir/main.cpp.o: ../main.cpp
 	$(CMAKE_COMMAND) -E cmake_progress_report /home/howard/Documents/computer_vision/CV_HW2/build/CMakeFiles $(CMAKE_PROGRESS_1)
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o"
-	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o -c /home/howard/Documents/computer_vision/CV_HW2/SIFT_opencv2.4x.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object CMakeFiles/hw2.dir/main.cpp.o"
+	/usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/hw2.dir/main.cpp.o -c /home/howard/Documents/computer_vision/CV_HW2/main.cpp
 
-CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.i"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/howard/Documents/computer_vision/CV_HW2/SIFT_opencv2.4x.cpp > CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.i
+CMakeFiles/hw2.dir/main.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/hw2.dir/main.cpp.i"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/howard/Documents/computer_vision/CV_HW2/main.cpp > CMakeFiles/hw2.dir/main.cpp.i
 
-CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.s"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/howard/Documents/computer_vision/CV_HW2/SIFT_opencv2.4x.cpp -o CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.s
+CMakeFiles/hw2.dir/main.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/hw2.dir/main.cpp.s"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/howard/Documents/computer_vision/CV_HW2/main.cpp -o CMakeFiles/hw2.dir/main.cpp.s
 
-CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o.requires:
-.PHONY : CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o.requires
+CMakeFiles/hw2.dir/main.cpp.o.requires:
+.PHONY : CMakeFiles/hw2.dir/main.cpp.o.requires
 
-CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o.provides: CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o.requires
-	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o.provides.build
-.PHONY : CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o.provides
+CMakeFiles/hw2.dir/main.cpp.o.provides: CMakeFiles/hw2.dir/main.cpp.o.requires
+	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/main.cpp.o.provides.build
+.PHONY : CMakeFiles/hw2.dir/main.cpp.o.provides
 
-CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o.provides.build: CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o
+CMakeFiles/hw2.dir/main.cpp.o.provides.build: CMakeFiles/hw2.dir/main.cpp.o
 
 # Object files for target hw2
 hw2_OBJECTS = \
-"CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o"
+"CMakeFiles/hw2.dir/main.cpp.o"
 
 # External object files for target hw2
 hw2_EXTERNAL_OBJECTS =
 
-hw2: CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o
+hw2: CMakeFiles/hw2.dir/main.cpp.o
 hw2: CMakeFiles/hw2.dir/build.make
-hw2: /usr/local/lib/libopencv_viz.so.3.1.0
-hw2: /usr/local/lib/libopencv_videostab.so.3.1.0
-hw2: /usr/local/lib/libopencv_videoio.so.3.1.0
-hw2: /usr/local/lib/libopencv_video.so.3.1.0
-hw2: /usr/local/lib/libopencv_superres.so.3.1.0
-hw2: /usr/local/lib/libopencv_stitching.so.3.1.0
-hw2: /usr/local/lib/libopencv_shape.so.3.1.0
-hw2: /usr/local/lib/libopencv_photo.so.3.1.0
-hw2: /usr/local/lib/libopencv_objdetect.so.3.1.0
-hw2: /usr/local/lib/libopencv_ml.so.3.1.0
-hw2: /usr/local/lib/libopencv_imgproc.so.3.1.0
-hw2: /usr/local/lib/libopencv_imgcodecs.so.3.1.0
-hw2: /usr/local/lib/libopencv_highgui.so.3.1.0
-hw2: /usr/local/lib/libopencv_flann.so.3.1.0
-hw2: /usr/local/lib/libopencv_features2d.so.3.1.0
-hw2: /usr/local/lib/libopencv_core.so.3.1.0
-hw2: /usr/local/lib/libopencv_calib3d.so.3.1.0
-hw2: /usr/local/lib/libopencv_features2d.so.3.1.0
-hw2: /usr/local/lib/libopencv_ml.so.3.1.0
-hw2: /usr/local/lib/libopencv_highgui.so.3.1.0
-hw2: /usr/local/lib/libopencv_videoio.so.3.1.0
-hw2: /usr/local/lib/libopencv_imgcodecs.so.3.1.0
-hw2: /usr/local/lib/libopencv_flann.so.3.1.0
-hw2: /usr/local/lib/libopencv_video.so.3.1.0
-hw2: /usr/local/lib/libopencv_imgproc.so.3.1.0
-hw2: /usr/local/lib/libopencv_core.so.3.1.0
+hw2: /usr/local/lib/libopencv_videostab.so.2.4.11
+hw2: /usr/local/lib/libopencv_video.so.2.4.11
+hw2: /usr/local/lib/libopencv_ts.a
+hw2: /usr/local/lib/libopencv_superres.so.2.4.11
+hw2: /usr/local/lib/libopencv_stitching.so.2.4.11
+hw2: /usr/local/lib/libopencv_photo.so.2.4.11
+hw2: /usr/local/lib/libopencv_ocl.so.2.4.11
+hw2: /usr/local/lib/libopencv_objdetect.so.2.4.11
+hw2: /usr/local/lib/libopencv_nonfree.so.2.4.11
+hw2: /usr/local/lib/libopencv_ml.so.2.4.11
+hw2: /usr/local/lib/libopencv_legacy.so.2.4.11
+hw2: /usr/local/lib/libopencv_imgproc.so.2.4.11
+hw2: /usr/local/lib/libopencv_highgui.so.2.4.11
+hw2: /usr/local/lib/libopencv_flann.so.2.4.11
+hw2: /usr/local/lib/libopencv_features2d.so.2.4.11
+hw2: /usr/local/lib/libopencv_core.so.2.4.11
+hw2: /usr/local/lib/libopencv_contrib.so.2.4.11
+hw2: /usr/local/lib/libopencv_calib3d.so.2.4.11
+hw2: /usr/lib/x86_64-linux-gnu/libGLU.so
+hw2: /usr/lib/x86_64-linux-gnu/libGL.so
+hw2: /usr/lib/x86_64-linux-gnu/libSM.so
+hw2: /usr/lib/x86_64-linux-gnu/libICE.so
+hw2: /usr/lib/x86_64-linux-gnu/libX11.so
+hw2: /usr/lib/x86_64-linux-gnu/libXext.so
+hw2: /usr/local/lib/libopencv_nonfree.so.2.4.11
+hw2: /usr/local/lib/libopencv_ocl.so.2.4.11
+hw2: /usr/local/lib/libopencv_video.so.2.4.11
+hw2: /usr/local/lib/libopencv_objdetect.so.2.4.11
+hw2: /usr/local/lib/libopencv_ml.so.2.4.11
+hw2: /usr/local/lib/libopencv_calib3d.so.2.4.11
+hw2: /usr/local/lib/libopencv_features2d.so.2.4.11
+hw2: /usr/local/lib/libopencv_highgui.so.2.4.11
+hw2: /usr/local/lib/libopencv_imgproc.so.2.4.11
+hw2: /usr/local/lib/libopencv_flann.so.2.4.11
+hw2: /usr/local/lib/libopencv_core.so.2.4.11
 hw2: CMakeFiles/hw2.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --red --bold "Linking CXX executable hw2"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/hw2.dir/link.txt --verbose=$(VERBOSE)
@@ -118,7 +127,7 @@ hw2: CMakeFiles/hw2.dir/link.txt
 CMakeFiles/hw2.dir/build: hw2
 .PHONY : CMakeFiles/hw2.dir/build
 
-CMakeFiles/hw2.dir/requires: CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o.requires
+CMakeFiles/hw2.dir/requires: CMakeFiles/hw2.dir/main.cpp.o.requires
 .PHONY : CMakeFiles/hw2.dir/requires
 
 CMakeFiles/hw2.dir/clean:

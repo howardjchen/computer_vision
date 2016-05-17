@@ -1,5 +1,5 @@
 FILE(REMOVE_RECURSE
-  "CMakeFiles/hw2.dir/SIFT_opencv2.4x.cpp.o"
+  "CMakeFiles/hw2.dir/main.cpp.o"
   "hw2.pdb"
   "hw2"
 )
