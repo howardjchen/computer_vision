@@ -19,7 +19,7 @@
 #include <fstream>
 
 #define K_KNN 4  // k for KNN
-#define RANSAC_DISTANCE 5
+#define RANSAC_DISTANCE 3
 
 #define OBJECT_IMG "object_11.bmp"
 #define TARGET_IMG "object_12.bmp"
@@ -267,17 +267,14 @@ int main(  )
     //cout << TargetKeypoint[0] << endl; 
     //cout << TargetKeypoint[0].at<double>(1,0) << endl;
     //cout << Object[0] << endl;
-    //printf("the max H[%d] = %d\n",Max_InlierIndex,Max_InlierNumber );
 
+    printf("the best H[%d] = %d\n",Max_InlierIndex,Max_InlierNumber );
     Mat Reconvered_H(H[Max_InlierIndex]);
-    int ObjectImage_row, ObjectImage_col;
 
-    ObjectImage_row = ObjectImage.rows;
-    ObjectImage_col = ObjectImage.cols;
 
-    Mat WarpingImage = Mat::zeros(708, 1024,CV_8UC3);
+    //Mat WarpingImage = Mat::zeros(ObjectImage.rows, ObjectImage.cols,CV_8UC3);
     //WarpingImage.create(ObjectImage.rows, ObjectImage.cols,ObjectImage.type());
-    //Mat WarpingImage = TargetImage.clone();
+    Mat WarpingImage = TargetImage.clone();
     //Mat WarpingImage;
     //Mat WarpingImage(ObjectImage.rows, ObjectImage.cols,ObjectImage.type());
 
@@ -285,16 +282,35 @@ int main(  )
     printf("object : row = %d, col = %d\n",ObjectImage.rows, ObjectImage.cols );
     printf("warping : row = %d, col = %d\n",WarpingImage.rows, WarpingImage.cols );
 
+    Mat WarpingPoint;
+
     for (int i = 0; i <= ObjectImage.rows-1 ; i++)     //rows
     {
         for (int j = 0; j <= ObjectImage.cols-1; j++) //cols
         {
-            WarpingImage.at<Vec3b>(i,j) = ObjectImage.at<Vec3b>(i,j);
+            if(ObjectImage.at<Vec3b>(i,j)[0] != 255 && ObjectImage.at<Vec3b>(i,j)[1] != 255 && ObjectImage.at<Vec3b>(i,j)[2] != 255)
+            {
+                Candidate[0] = i;
+                Candidate[1] = j;
+                Candidate[2] = 1;
+                Mat Before(3,1,CV_64FC1,Candidate);
+                WarpingPoint = Reconvered_H*Before;
+                int x = WarpingPoint.at<double>(0,0);
+                int y = WarpingPoint.at<double>(0,1);
+                WarpingImage.at<Vec3b>(x,y) = ObjectImage.at<Vec3b>(i,j);
+            }    
         }
     }
 
-    imshow("objectimg",ObjectImage);
-    imshow("Warping",WarpingImage);
+    //Mat result = TargetImage.clone();
+    //WarpingImage.copyTo(result);
+    //WarpingImage.copyTo(result(Rect(0, 0, WarpingImage.cols, WarpingImage.rows)));
+    //imshow("result", result);
+
+
+    //imshow("ObjectImage",ObjectImage);
+    imshow("WarpingImage",WarpingImage);
+    //imshow("TargetImage",TargetImage);
     waitKey(0);
 
     return 0;
