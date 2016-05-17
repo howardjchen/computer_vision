@@ -19,6 +19,9 @@
 #include <fstream>
 
 #include <pthread.h>
+#include <omp.h>
+
+#include <string.h>
 
 #define K_KNN 4  // k for KNN
 #define RANSAC_DISTANCE 3
@@ -34,6 +37,8 @@ long long n = 256;
 
 int key1,key2;
 std::vector<cv::KeyPoint> keypoints1, keypoints2;
+std::vector<cv::KeyPoint> keypoints3, keypoints4;
+
 cv :: Mat H[256];
 int H_InlierNumber[256]; 
 
@@ -331,7 +336,8 @@ Mat FirstProcess( Mat ObjectImage, Mat TargetImage)
                 WarpingPoint = Reconvered_H*Before;
                 int x = WarpingPoint.at<double>(0,0);
                 int y = WarpingPoint.at<double>(0,1);
-                WarpingImage.at<Vec3b>(x,y) = ObjectImage.at<Vec3b>(i,j);
+                if(x > 0 && y > 0)
+                    WarpingImage.at<Vec3b>(x,y) = ObjectImage.at<Vec3b>(i,j);
             }    
         }
     }
@@ -609,10 +615,8 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
                 WarpingPoint = Reconvered_H*Before;
                 int x = WarpingPoint.at<double>(0,0);
                 int y = WarpingPoint.at<double>(0,1);
-                if ( x > 0)
-                {
-                    WarpingImage.at<Vec3b>(x,y) = ObjectImage.at<Vec3b>(i,j);    
-                }   
+                if ( x >= 0 && y >= 0)
+                    WarpingImage.at<Vec3b>(x,y) = ObjectImage.at<Vec3b>(i,j);     
             }    
         }
     }
@@ -714,17 +718,24 @@ Mat FirstProcess_Pthread( Mat ObjectImage, Mat TargetImage)
 
     cout << "computing KNN" << endl;
 
-    for (size_t i = 0; i < key1; ++i)   //need threading
+    //omp_set_num_threads(4);
+    //OMP_SET_NUM_THREADS(4)
+
+    #pragma omp parallel shared(descriptor1,descriptor2,KeyPoint_Neighborhood) private(i,j,k,diff_vector)
     {
-        for (size_t j = 0; j < key2; ++j)
-        {
-            for (size_t k = 0; k < 128; ++k)
+        #pragma for schedule(static)
+            for (size_t i = 0; i < key1; ++i)   //need threading
             {
-                diff_vector +=  (descriptor1.at<float>(i,k) - descriptor2.at<float>(j,k))*(descriptor1.at<float>(i,k) - descriptor2.at<float>(j,k));    
+                for (size_t j = 0; j < key2; ++j)
+                {
+                    for (size_t k = 0; k < 128; ++k)
+                    {
+                        diff_vector +=  (descriptor1.at<float>(i,k) - descriptor2.at<float>(j,k))*(descriptor1.at<float>(i,k) - descriptor2.at<float>(j,k));    
+                    }
+                    KeyPoint_Neighborhood[i][j] = sqrt(diff_vector);
+                    diff_vector = 0;
+                }
             }
-            KeyPoint_Neighborhood[i][j] = sqrt(diff_vector);
-            diff_vector = 0;
-        }
     }
 
     int Min_Distance;
@@ -865,7 +876,8 @@ Mat FirstProcess_Pthread( Mat ObjectImage, Mat TargetImage)
                 WarpingPoint = Reconvered_H*Before;
                 int x = WarpingPoint.at<double>(0,0);
                 int y = WarpingPoint.at<double>(0,1);
-                WarpingImage.at<Vec3b>(x,y) = ObjectImage.at<Vec3b>(i,j);
+                if(x >=0 && y>= 0)
+                    WarpingImage.at<Vec3b>(x,y) = ObjectImage.at<Vec3b>(i,j);
             }    
         }
     }
@@ -1118,7 +1130,7 @@ Mat SecondProcess_Pthread( Mat ObjectImage, Mat TargetImage)
                 WarpingPoint = Reconvered_H*Before;
                 int x = WarpingPoint.at<double>(0,0);
                 int y = WarpingPoint.at<double>(0,1);
-                if(x > 0)
+                if(x >= 0 && y>=0)
                     WarpingImage.at<Vec3b>(x,y) = ObjectImage.at<Vec3b>(i,j);
             }    
         }
@@ -1159,6 +1171,265 @@ Mat SecondProcess_Pthread( Mat ObjectImage, Mat TargetImage)
     return WarpingImage;
 }
 
+Mat SecondProcess_Pthread_v2( Mat ObjectImage, Mat TargetImage, Mat ReturnImage)
+{
+    int diff_vector = 0;
+
+    long       thread;  /* Use long in case of a 64-bit system */
+    pthread_t* thread_handles;
+
+    thread_handles = (pthread_t*) malloc (thread_count*sizeof(pthread_t)); 
+    //Mat ObjectImage = cv::imread( OBJECT_IMG, 1 );  //type : 8UC3
+    //Mat TargetImage = cv::imread( TARGET_IMG, 1 );
+ 
+    /* threshold      = 0.04;
+       edge_threshold = 10.0;
+       magnification  = 3.0;    */
+ 
+    // SIFT feature detector and feature extractor
+
+    cv::SiftFeatureDetector detector( 0.05, 5.0 );
+    cv::SiftDescriptorExtractor extractor( 3.0 );
+ 
+    // Feature detection
+    //std::vector<cv::KeyPoint> keypoints1, keypoints2;
+
+    cout << "before keypoint" << endl;
+    keypoints1 = keypoints3;
+    keypoints2 = keypoints3;
+    detector.detect( ObjectImage, keypoints1 );
+    detector.detect( TargetImage, keypoints2 );
+ 
+    // Feature display
+    Mat feat1,feat2;
+    /*drawKeypoints(ObjectImage,keypoints1,feat1,Scalar(255, 255, 255),DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    drawKeypoints(TargetImage,keypoints2,feat2,Scalar(255, 255, 255),DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    imwrite( "feat1.bmp", feat1 );
+    imwrite( "feat2.bmp", feat2 );*/
+
+    key1 = keypoints1.size();   //object
+    key2 = keypoints2.size();   //target
+    printf("Keypoint1 = %d \n",key1);
+    printf("Keypoint2 = %d \n",key2);
+ 
+    // Feature descriptor computation
+    Mat descriptor1,descriptor2;
+    extractor.compute( ObjectImage, keypoints1, descriptor1 );
+    extractor.compute( TargetImage, keypoints2, descriptor2 );
+
+    printf("Descriptor1=(%d,%d)\n", descriptor1.size().height,descriptor1.size().width);
+    printf("Descriptor2=(%d,%d)\n", descriptor2.size().height,descriptor2.size().width);
+
+
+    //int KeyPoint_Neighborhood[key1][key2];
+    //int K_NearestNeighbor[key1][K_KNN];
+
+    int **KeyPoint_Neighborhood;    //int KeyPoint_Neighborhood[key1][key2];
+    int **K_NearestNeighbor;   //int K_NearestNeighbor[key1][K_KNN];
+
+    KeyPoint_Neighborhood = (int **)malloc(key1*sizeof(int*));
+    for (int i = 0; i < key1; ++i)
+        KeyPoint_Neighborhood[i] = (int *)malloc(key2*sizeof(int));
+
+    K_NearestNeighbor = (int **)malloc(key1*sizeof(int*));
+    for (int i = 0; i < key1; ++i)
+        K_NearestNeighbor[i] = (int *)malloc(K_KNN*sizeof(int));
+
+
+    cout << "computing KNN" << endl;
+
+    for (size_t i = 0; i < key1; ++i)   //need threading
+    {
+        for (size_t j = 0; j < key2; ++j)
+        {
+            for (size_t k = 0; k < 128; ++k)
+            {
+                diff_vector +=  (descriptor1.at<float>(i,k) - descriptor2.at<float>(j,k))*(descriptor1.at<float>(i,k) - descriptor2.at<float>(j,k));    
+            }
+            KeyPoint_Neighborhood[i][j] = sqrt(diff_vector);
+            diff_vector = 0;
+        }
+    }
+
+    int Min_Distance;
+    int Min_Index = 0;
+
+    for (size_t i = 0; i < key1; ++i)   //need threading7
+    {   
+        for (size_t j = 0; j < K_KNN; ++j)
+        {
+            Min_Distance = KeyPoint_Neighborhood[i][0]; 
+            for (size_t k = 0; k < key2; ++k)
+            {
+                if(Min_Distance > KeyPoint_Neighborhood[i][k])
+                {
+                    Min_Distance = KeyPoint_Neighborhood[i][k];
+                    Min_Index = k;
+                } 
+            }
+            K_NearestNeighbor[i][j] = Min_Index;
+            KeyPoint_Neighborhood[i][Min_Index] = INT_MAX;
+        }
+    }
+
+    
+    /*for (size_t i = 0; i < 4; ++i)
+    {
+        cout <<  keypoints1[i].pt.x << " " << keypoints2[i].pt.y << endl;
+    }*/
+
+    /*for (int i = 0; i < key1; ++i)
+    {
+        printf("K_NearestNeighbor[%d] = ",i);
+        for (size_t j = 0; j < K_KNN; ++j)
+            printf(" %d ",K_NearestNeighbor[i][j]);
+        printf("\n");
+    }*/
+
+
+    std::vector<Point2f> obj;
+    std::vector<Point2f> scene[256];
+    
+
+    for (size_t i = H_START_NUM; i < H_END_NUM; ++i)
+        obj.push_back( keypoints1[i].pt );
+
+    int Extract_Index[256][4];
+    int m = 0;
+    int IndexForKNN;
+    int IndexForScene; 
+    //int H_InlierNumber[256];
+
+    memset(H_InlierNumber,0,sizeof(int));
+
+
+
+    cout << "arrange the index of neighbors from KNN" << endl;
+    for (int i= 0; i < 4; ++i)
+        for (int j = 0; j < 4; ++j)
+            for (int k = 0; k < 4; ++k)
+                for( int l = 0; l < 4 ; l++ )
+                {
+                    Extract_Index[m][0] = i;
+                    Extract_Index[m][1] = j;
+                    Extract_Index[m][2] = k;
+                    Extract_Index[m][3] = l;
+                    m++;
+                }
+
+
+    int Extract = 0;
+
+    cout << "computing Homography" << endl;
+    for (int i = 0; i < 256; ++i)
+    {
+        for (int j = H_START_NUM; j < H_END_NUM; ++j)
+        {
+            IndexForKNN = Extract_Index[i][Extract];
+            IndexForScene = K_NearestNeighbor[j][IndexForKNN];
+            scene[i].push_back( keypoints2[IndexForScene].pt );
+            Extract++;
+            if(Extract > 3)
+                Extract = 0;
+            //cout << IndexForScene << " ";
+        }
+        //printf("\n");
+        H[i] = findHomography(obj, scene[i]);
+    }
+
+    cout << "Computing the best Homography using RANSAC" << endl;
+
+    for (thread = 0; thread < thread_count; thread++)  
+        pthread_create(&thread_handles[thread], NULL,RANSAC_Thread, (void*)thread);
+
+    for (thread = 0; thread < thread_count; thread++)
+        pthread_join(thread_handles[thread],NULL);
+
+    
+    int Max_InlierIndex = 0;
+    int Max_InlierNumber = 0;
+
+    for (int i = 0; i < 256; ++i)
+    {
+        if (Max_InlierNumber < H_InlierNumber[i])
+        {
+            Max_InlierNumber = H_InlierNumber[i];
+            Max_InlierIndex = i;
+        }
+    }
+
+    //cout << TargetKeypoint[0] << endl; 
+    //cout << TargetKeypoint[0].at<double>(1,0) << endl;
+    //cout << Object[0] << endl;
+
+    printf("the best Homography[%d] = %d\n",Max_InlierIndex,Max_InlierNumber );
+    Mat Reconvered_H(H[Max_InlierIndex]);
+
+
+    //Mat WarpingImage = Mat::zeros(ObjectImage.rows, ObjectImage.cols,CV_8UC3);
+    Mat WarpingImage = ReturnImage.clone();
+    Mat WarpingPoint;
+
+    //printf("object : row = %d, col = %d\n",ObjectImage.rows, ObjectImage.cols );
+    //printf("warping : row = %d, col = %d\n",WarpingImage.rows, WarpingImage.cols );
+    printf("Warping\n");
+
+    double Candidate[3];
+
+    for (int i = 0; i <= ObjectImage.rows-1 ; i++)      //rows
+    {
+        for (int j = 0; j <= ObjectImage.cols-1; j++)   //cols
+        {
+            if(ObjectImage.at<Vec3b>(i,j)[0] != 255 && ObjectImage.at<Vec3b>(i,j)[1] != 255 && ObjectImage.at<Vec3b>(i,j)[2] != 255)
+            {
+                Candidate[0] = i;
+                Candidate[1] = j;
+                Candidate[2] = 1;
+                Mat Before(3,1,CV_64FC1,Candidate);
+                WarpingPoint = Reconvered_H*Before;
+                int x = WarpingPoint.at<double>(0,0);
+                int y = WarpingPoint.at<double>(0,1);
+                if(x >= 0)
+                    ReturnImage.at<Vec3b>(x,y) = ObjectImage.at<Vec3b>(i,j);
+            }    
+        }
+    }
+
+   /* Mat Result = TargetImage.clone();
+    Point2f src_center(WarpingImage.cols/2.0F, WarpingImage.rows/2.0F);
+    Mat rot_mat = getRotationMatrix2D(src_center, 0, 1.0);
+    Mat AfterRotation;
+    warpAffine(WarpingImage, AfterRotation, rot_mat, WarpingImage.size());
+
+    for (int i = 0; i <= AfterRotation.rows-1 ; i++)     //rows
+    {
+        for (int j = 0; j <= AfterRotation.cols-1; j++) //cols
+        {
+            if(AfterRotation.at<Vec3b>(i,j)[0] != 0 && AfterRotation.at<Vec3b>(i,j)[1] != 0 && AfterRotation.at<Vec3b>(i,j)[2] != 0)
+            {
+                Result.at<Vec3b>(i,j) = AfterRotation.at<Vec3b>(i,j);
+            }    
+        }
+    }*/
+
+    //Mat result = TargetImage.clone();
+    //WarpingImage.copyTo(result);
+    //WarpingImage.copyTo(result(Rect(0, 0, WarpingImage.cols, WarpingImage.rows)));
+    //imshow("result", result);
+
+
+    //imshow("ObjectImage",ObjectImage);
+    //imshow("WarpingImage",WarpingImage);
+    //imshow("Result",Result);
+    //imshow("TargetImage",TargetImage)
+
+    free(K_NearestNeighbor);
+    free (KeyPoint_Neighborhood);
+    free(thread_handles);
+
+    return ReturnImage;
+}
+
 
 void* RANSAC_Thread(void* rank)
 {
@@ -1177,7 +1448,7 @@ void* RANSAC_Thread(void* rank)
     int Max_InlierNumber = 0;
     int Max_InlierIndex = 0;
 
-    printf("thread %ld is working : %lld - %lld\n",my_rank,my_first_i,my_last_i );
+    //printf("thread %ld is working : %lld - %lld\n",my_rank,my_first_i,my_last_i );
 
     for (int i = my_first_i; i < my_last_i; ++i)
     {
@@ -1212,15 +1483,18 @@ void* RANSAC_Thread(void* rank)
     }
 }
 
+
 int main(int argc, char const *argv[])
 {
     Mat ObjectImage = cv::imread( argv[1], 1 );  //type : 8UC3
-    Mat TargetImage = cv::imread( argv[2], 1 );
+    Mat ObjectImage2 = cv::imread( argv[2], 1 );
+    Mat TargetImage = cv::imread( argv[3], 1 );
     Mat ResultImage;
-    int cmd = strtol(argv[3],NULL,10);
+    Mat TempImage;
+    int cmd = strtol(argv[4],NULL,10);
     double start, end;
     clock_t clock();
-    thread_count = strtol(argv[4],NULL,10);
+    thread_count = strtol(argv[5],NULL,10);
 
     start = clock();
     if (cmd == 1)
@@ -1243,9 +1517,17 @@ int main(int argc, char const *argv[])
         printf("================= using method 2 pthread : %ld ================\n",thread_count);
         ResultImage = SecondProcess_Pthread(ObjectImage, TargetImage);
     }
+    else if(cmd == 5)
+    {
+        TempImage = FirstProcess_Pthread(ObjectImage, TargetImage);
+        //imwrite( "TempImage.bmp", TempImage );
+        //Mat temp = cv::imread( "TempImage.bmp", 1 );
+        //ResultImage = SecondProcess_Pthread(ObjectImage, TempImage);
+        ResultImage = SecondProcess_Pthread_v2(ObjectImage2, TargetImage,TempImage);
+    }
 
     imshow("result",ResultImage);
-
+   // imwrite( "result.bmp", ResultImage );
 
     end = clock();
     printf("the time elasped = %f s\n",(end-start)/CLOCKS_PER_SEC);
