@@ -47,6 +47,50 @@ using namespace std;
 using namespace cv;
 
 void* RANSAC_Thread(void* rank);
+
+Mat ComputeH(int n, Point2f *p1, Point2f *p2)
+{ 
+    int i; 
+    CvMat *A = cvCreateMat(2*n, 9, CV_64FC1); 
+    CvMat *U = cvCreateMat(2*n, 2*n, CV_64FC1); 
+    CvMat *D = cvCreateMat(2*n, 9, CV_64FC1); 
+    CvMat *V = cvCreateMat(9, 9, CV_64FC1); 
+    Mat H_local;
+    cvZero(A); 
+    
+    for(i = 0; i < 1; i++)
+    { 
+        // 2*i row 
+        cvmSet(A,2*i,3,-p1[i].x); 
+        cvmSet(A,2*i,4,-p1[i].y); 
+        cvmSet(A,2*i,5,-1); 
+        cvmSet(A,2*i,6,p2[i].y*p1[i].x); 
+        cvmSet(A,2*i,7,p2[i].y*p1[i].y); 
+        cvmSet(A,2*i,8,p2[i].y); 
+        // 2*i+1 row 
+        cvmSet(A,2*i+1,0,p1[i].x); 
+        cvmSet(A,2*i+1,1,p1[i].y); 
+        cvmSet(A,2*i+1,2,1); 
+        cvmSet(A,2*i+1,6,-p2[i].x*p1[i].x); 
+        cvmSet(A,2*i+1,7,-p2[i].x*p1[i].y); 
+        cvmSet(A,2*i+1,8,-p2[i].x); 
+    } 
+    // SVD 
+    // The flags cause U and V to be returned transpose
+    // Therefore, in OpenCV, A = U^T D V 
+    cvSVD(A, D, U, V, CV_SVD_U_T|CV_SVD_V_T);  
+
+    // take the last column of V^T, i.e., last row of V
+    /*for(i=0; i<9; i++) 
+        cvmSet(H_local, i/3, i%3, cvmGet(V, 8, i)); */
+      
+    cvReleaseMat(&A); 
+    cvReleaseMat(&U); 
+    cvReleaseMat(&D); 
+    cvReleaseMat(&V); 
+
+    return H_local;
+} 
  
 /*****************************************************************************
 
@@ -1366,8 +1410,8 @@ Mat SecondProcess_Pthread_v2( Mat ObjectImage, Mat TargetImage, Mat ReturnImage)
     Mat Reconvered_H(H[Max_InlierIndex]);
 
 
-    //Mat WarpingImage = Mat::zeros(ObjectImage.rows, ObjectImage.cols,CV_8UC3);
-    Mat WarpingImage = ReturnImage.clone();
+    Mat WarpingImage = Mat::zeros(ObjectImage.rows, ObjectImage.cols,CV_8UC3);
+    //Mat WarpingImage = ReturnImage.clone();
     Mat WarpingPoint;
 
     //printf("object : row = %d, col = %d\n",ObjectImage.rows, ObjectImage.cols );
@@ -1390,14 +1434,14 @@ Mat SecondProcess_Pthread_v2( Mat ObjectImage, Mat TargetImage, Mat ReturnImage)
                 int x = WarpingPoint.at<double>(0,0);
                 int y = WarpingPoint.at<double>(0,1);
                 if(x >= 0)
-                    ReturnImage.at<Vec3b>(x,y) = ObjectImage.at<Vec3b>(i,j);
+                    WarpingImage.at<Vec3b>(x-100,y+200) = ObjectImage.at<Vec3b>(i,j);
             }    
         }
     }
 
-   /* Mat Result = TargetImage.clone();
+    Mat Result = ReturnImage.clone();
     Point2f src_center(WarpingImage.cols/2.0F, WarpingImage.rows/2.0F);
-    Mat rot_mat = getRotationMatrix2D(src_center, 0, 1.0);
+    Mat rot_mat = getRotationMatrix2D(src_center, 180, 1.0);
     Mat AfterRotation;
     warpAffine(WarpingImage, AfterRotation, rot_mat, WarpingImage.size());
 
@@ -1410,7 +1454,7 @@ Mat SecondProcess_Pthread_v2( Mat ObjectImage, Mat TargetImage, Mat ReturnImage)
                 Result.at<Vec3b>(i,j) = AfterRotation.at<Vec3b>(i,j);
             }    
         }
-    }*/
+    }
 
     //Mat result = TargetImage.clone();
     //WarpingImage.copyTo(result);
@@ -1427,7 +1471,7 @@ Mat SecondProcess_Pthread_v2( Mat ObjectImage, Mat TargetImage, Mat ReturnImage)
     free (KeyPoint_Neighborhood);
     free(thread_handles);
 
-    return ReturnImage;
+    return Result;
 }
 
 
@@ -1520,14 +1564,11 @@ int main(int argc, char const *argv[])
     else if(cmd == 5)
     {
         TempImage = FirstProcess_Pthread(ObjectImage, TargetImage);
-        //imwrite( "TempImage.bmp", TempImage );
-        //Mat temp = cv::imread( "TempImage.bmp", 1 );
-        //ResultImage = SecondProcess_Pthread(ObjectImage, TempImage);
         ResultImage = SecondProcess_Pthread_v2(ObjectImage2, TargetImage,TempImage);
     }
 
     imshow("result",ResultImage);
-   // imwrite( "result.bmp", ResultImage );
+    imwrite( "result.bmp", ResultImage );
 
     end = clock();
     printf("the time elasped = %f s\n",(end-start)/CLOCKS_PER_SEC);
@@ -1535,3 +1576,4 @@ int main(int argc, char const *argv[])
 
     return 0;
 }
+
