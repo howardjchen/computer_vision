@@ -25,7 +25,7 @@
 
 #define K_KNN 4  // k for KNN
 #define RANSAC_DISTANCE 3
-#define ITERATIVE 20
+#define ITERATIVE 10
 
 #define H_START_NUM 0
 #define H_END_NUM 4
@@ -308,6 +308,7 @@ Mat FirstProcess( Mat ObjectImage, Mat TargetImage)
 
     while(count < ITERATIVE)
     {
+        Mat local_H[256];
         cout << "computing Homography" << endl;
         for (int i = 0; i < 256; ++i)
         {
@@ -325,7 +326,7 @@ Mat FirstProcess( Mat ObjectImage, Mat TargetImage)
                 //printf("CorespondIndex = %d ",CorespondIndex );
             }
             //printf("\n");
-            H[i] = findHomography(obj[i], scene[i]);
+            local_H[i] = findHomography(obj[i], scene[i]);
             obj[i].clear();
             scene[i].clear();
         }
@@ -354,7 +355,7 @@ Mat FirstProcess( Mat ObjectImage, Mat TargetImage)
                 Candidate[2] = 1;
 
                 Mat Before(3,1,CV_64FC1,Candidate);
-                TargetKeypoint[j] = H[i]*Before;
+                TargetKeypoint[j] = local_H[i]*Before;
                 
                 /****************** Computing inlier using RANSAC ***************/           
                 
@@ -389,7 +390,7 @@ Mat FirstProcess( Mat ObjectImage, Mat TargetImage)
         //cout << Object[0] << endl;
 
         printf("the best Candidate Homography[%d] = %d\n",count,Max_InlierNumber );
-        Candidate_H[count] = H[Max_InlierIndex].clone();
+        Candidate_H[count] = local_H[Max_InlierIndex].clone();
         Candidate_InlierNumber[count] = Max_InlierNumber;
 
         for (int ii = 0; ii < 4; ++ii)
