@@ -25,6 +25,7 @@
 
 #define K_KNN 4  // k for KNN
 #define RANSAC_DISTANCE 3
+#define ITERATIVE 20
 
 #define H_START_NUM 0
 #define H_END_NUM 4
@@ -247,20 +248,14 @@ Mat FirstProcess( Mat ObjectImage, Mat TargetImage)
     }*/
 
 
-    std::vector<Point2f> obj;
+    std::vector<Point2f> obj[256];
     std::vector<Point2f> scene[256];
     
-
-    for (size_t i = H_START_NUM; i < H_END_NUM; ++i)
-        obj.push_back( keypoints1[i].pt );
 
     int Extract_Index[256][4];
     int m = 0;
     int IndexForKNN;
     int IndexForScene; 
-
-    memset(H_InlierNumber,0,sizeof(int));
-
 
 
     cout << "arrange the index of neighbors from KNN" << endl;
@@ -277,11 +272,14 @@ Mat FirstProcess( Mat ObjectImage, Mat TargetImage)
                 }
 
 
+    memset(H_InlierNumber,0,sizeof(int));
     Mat H_local[256];
     int Extract = 0;
 
-    cout << "computing Homography" << endl;
-    for (int i = 0; i < 256; ++i)
+
+
+    //cout << "computing Homography" << endl;
+    /*for (int i = 0; i < 256; ++i)
     {
         for (int j = H_START_NUM; j < H_END_NUM; ++j)
         {
@@ -296,72 +294,136 @@ Mat FirstProcess( Mat ObjectImage, Mat TargetImage)
         //printf("\n");
         H_local[i] = findHomography(obj, scene[i]);
         H[i] = H_local[i].clone();
-    }
+    }*/
 
 
+    /*for (size_t i = H_START_NUM; i < H_END_NUM; ++i)
+        obj.push_back( keypoints1[i].pt );*/
 
-    
-    double Candidate[3];
-    Mat TargetKeypoint[key1];
-    double Object_X, Object_Y;
-    double Target_X, Target_Y;
-    double distance;
+    int count = 0;
+    Mat Candidate_H[ITERATIVE];
+    int Candidate_InlierNumber[ITERATIVE];
+    int store[256][4];
+    int Candidate_store[ITERATIVE][4];
 
-    int Max_InlierNumber = 0;
-    int Max_InlierIndex = 0;
-
-    cout << "Computing the best Homography using RANSAC" << endl;
-
-    for (int i = 0; i < 256; ++i)
+    while(count < ITERATIVE)
     {
-        for (int j = 0; j < key1; j++)
+        cout << "computing Homography" << endl;
+        for (int i = 0; i < 256; ++i)
         {
-            Candidate[0] = keypoints1[j].pt.x;
-            Candidate[1] = keypoints1[j].pt.y;
-            Candidate[2] = 1;
-
-            Mat Before(3,1,CV_64FC1,Candidate);
-            TargetKeypoint[j] = H[i]*Before;
-            
-            /****************** Computing inlier using RANSAC ***************/           
-            
-            Target_X = TargetKeypoint[j].at<double>(0,0);
-            Target_Y = TargetKeypoint[j].at<double>(0,1);
-            
-            for (int k = 0; k < key2; k++)
+            for (int j = 0; j < 4; ++j)
             {
-                Object_X = keypoints2[k].pt.x;
-                Object_Y = keypoints2[k].pt.y;
-                distance = ComputeDistance(Target_X,Target_Y,Object_X,Object_Y);
-                //printf("distance = %f \n",distance );
-
-                if (distance < RANSAC_DISTANCE)
-                {
-                    H_InlierNumber[i]++;
-                    break;
-                }
+                int CorespondIndex = (rand()% key1);
+                store[i][j] = CorespondIndex;
+                IndexForKNN = Extract_Index[i][Extract];
+                IndexForScene = K_NearestNeighbor[CorespondIndex][IndexForKNN];
+                scene[i].push_back( keypoints2[IndexForScene].pt );
+                obj[i].push_back( keypoints1[CorespondIndex].pt );
+                Extract++;
+                if(Extract > 3)
+                    Extract = 0;
+                //printf("CorespondIndex = %d ",CorespondIndex );
             }
-            /*********************************************************/
+            //printf("\n");
+            H[i] = findHomography(obj[i], scene[i]);
+            obj[i].clear();
+            scene[i].clear();
         }
 
-        if (H_InlierNumber[i] > Max_InlierNumber)
+
+
+        
+        double Candidate[3];
+        //double Candidate[3];
+        Mat TargetKeypoint[key1];
+        double Object_X, Object_Y;
+        double Target_X, Target_Y;
+        double distance;
+
+        int Max_InlierNumber = 0;
+        int Max_InlierIndex = 0;
+
+        cout << "Computing the best Homography using RANSAC" << endl;
+
+        for (int i = 0; i < 256; ++i)
         {
-            Max_InlierNumber = H_InlierNumber[i];
-            Max_InlierIndex = i;
-        }
-        //printf("H_InlierNumber[%d] = %d\n",i,H_InlierNumber[i]);
-    }
-    //cout << TargetKeypoint[0] << endl; 
-    //cout << TargetKeypoint[0].at<double>(1,0) << endl;
-    //cout << Object[0] << endl;
+            for (int j = 0; j < key1; j++)
+            {
+                Candidate[0] = keypoints1[j].pt.x;
+                Candidate[1] = keypoints1[j].pt.y;
+                Candidate[2] = 1;
 
-    printf("the best Homography[%d] = %d\n",Max_InlierIndex,Max_InlierNumber );
-    Mat Reconvered_H(H[Max_InlierIndex]);
+                Mat Before(3,1,CV_64FC1,Candidate);
+                TargetKeypoint[j] = H[i]*Before;
+                
+                /****************** Computing inlier using RANSAC ***************/           
+                
+                Target_X = TargetKeypoint[j].at<double>(0,0);
+                Target_Y = TargetKeypoint[j].at<double>(0,1);
+                
+                for (int k = 0; k < key2; k++)
+                {
+                    Object_X = keypoints2[k].pt.x;
+                    Object_Y = keypoints2[k].pt.y;
+                    distance = ComputeDistance(Target_X,Target_Y,Object_X,Object_Y);
+                    //printf("distance = %f \n",distance );
+
+                    if (distance < RANSAC_DISTANCE)
+                    {
+                        H_InlierNumber[i]++;
+                        break;
+                    }
+                }
+                /*********************************************************/
+            }
+
+            if (H_InlierNumber[i] > Max_InlierNumber)
+            {
+                Max_InlierNumber = H_InlierNumber[i];
+                Max_InlierIndex = i;
+            }
+            //printf("H_InlierNumber[%d] = %d\n",i,H_InlierNumber[i]);
+        }
+        //cout << TargetKeypoint[0] << endl; 
+        //cout << TargetKeypoint[0].at<double>(1,0) << endl;
+        //cout << Object[0] << endl;
+
+        printf("the best Candidate Homography[%d] = %d\n",count,Max_InlierNumber );
+        Candidate_H[count] = H[Max_InlierIndex].clone();
+        Candidate_InlierNumber[count] = Max_InlierNumber;
+
+        for (int ii = 0; ii < 4; ++ii)
+        {
+            Candidate_store[count][ii] = store[Max_InlierIndex][ii];
+        }
+        
+        count++;
+    }
+
+    int Max_Candidate_InlierNumber = 0;
+    int Max_Candidate_InlierIndex = 0;
+
+    for (int i = 0; i < ITERATIVE; ++i)
+    {
+        if (Candidate_InlierNumber[i] > Max_Candidate_InlierNumber)
+        {
+            Max_Candidate_InlierNumber = Candidate_InlierNumber[i];
+            Max_Candidate_InlierIndex = i;
+        }
+    }
+
+    printf("the best candidate H[%d] is : %d \n",Max_Candidate_InlierIndex,Max_Candidate_InlierNumber);
+    printf("store_corespond = %d %d %d %d\n",Candidate_store[Max_Candidate_InlierIndex][0],Candidate_store[Max_Candidate_InlierIndex][1],Candidate_store[Max_Candidate_InlierIndex][2],Candidate_store[Max_Candidate_InlierIndex][3]);
+
+    Mat Reconvered_H(Candidate_H[Max_Candidate_InlierIndex]);
+
+    cout << Reconvered_H << endl;
 
 
     //Mat WarpingImage = Mat::zeros(ObjectImage.rows, ObjectImage.cols,CV_8UC3);
     Mat WarpingImage = TargetImage.clone();
     Mat WarpingPoint;
+    double Candidate[3];
 
     //printf("object : row = %d, col = %d\n",ObjectImage.rows, ObjectImage.cols );
     //printf("warping : row = %d, col = %d\n",WarpingImage.rows, WarpingImage.cols );
@@ -527,12 +589,9 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
     }*/
 
 
-    std::vector<Point2f> obj;
+    std::vector<Point2f> obj[256];
     std::vector<Point2f> scene[256];
-    
 
-    for (size_t i = H_START_NUM; i < H_END_NUM; ++i)
-        obj.push_back( keypoints1[i].pt );
 
     int Extract_Index[256][4];
     int m = 0;
@@ -561,80 +620,127 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
     Mat H[256];
     int Extract = 0;
 
-    cout << "computing Homography" << endl;
-    for (int i = 0; i < 256; ++i)
+    int count = 0;
+    Mat Candidate_H[ITERATIVE];
+    int Candidate_InlierNumber[ITERATIVE];
+    int store[256][4];
+    int Candidate_store[ITERATIVE][4];
+
+    while(count < ITERATIVE)
     {
-        for (int j = H_START_NUM; j < H_END_NUM; ++j)
+        cout << "computing Homography" << endl;
+        for (int i = 0; i < 256; ++i)
         {
-            IndexForKNN = Extract_Index[i][Extract];
-            IndexForScene = K_NearestNeighbor[j][IndexForKNN];
-            scene[i].push_back( keypoints2[IndexForScene].pt );
-            Extract++;
-            if(Extract > 3)
-                Extract = 0;
-            //cout << IndexForScene << " ";
-        }
-        //printf("\n");
-        H[i] = findHomography(obj, scene[i]);
-    }
-
-
-
-    
-    double Candidate[3];
-    Mat TargetKeypoint[key1];
-    double Object_X, Object_Y;
-    double Target_X, Target_Y;
-    double distance;
-
-    int Max_InlierNumber = 0;
-    int Max_InlierIndex = 0;
-
-    cout << "Computing the best Homography using RANSAC" << endl;
-
-    for (int i = 0; i < 256; ++i)
-    {
-        for (int j = 0; j < key1; j++)
-        {
-            Candidate[0] = keypoints1[j].pt.x;
-            Candidate[1] = keypoints1[j].pt.y;
-            Candidate[2] = 1;
-
-            Mat Before(3,1,CV_64FC1,Candidate);
-            TargetKeypoint[j] = H[i]*Before;
-            
-            /****************** Computing inlier using RANSAC ***************/           
-            
-            Target_X = TargetKeypoint[j].at<double>(0,0);
-            Target_Y = TargetKeypoint[j].at<double>(0,1);
-            
-            for (int k = 0; k < key2; k++)
+            for (int j = 0; j < 4; ++j)
             {
-                Object_X = keypoints2[k].pt.x;
-                Object_Y = keypoints2[k].pt.y;
-                distance = ComputeDistance(Target_X,Target_Y,Object_X,Object_Y);
-                //printf("distance = %f \n",distance );
-
-                if (distance < RANSAC_DISTANCE)
-                {
-                    H_InlierNumber[i]++;
-                    break;
-                }
+                int CorespondIndex = (rand()% key1);
+                store[i][j] = CorespondIndex;
+                IndexForKNN = Extract_Index[i][Extract];
+                IndexForScene = K_NearestNeighbor[CorespondIndex][IndexForKNN];
+                scene[i].push_back( keypoints2[IndexForScene].pt );
+                obj[i].push_back( keypoints1[CorespondIndex].pt );
+                Extract++;
+                if(Extract > 3)
+                    Extract = 0;
+                //printf("CorespondIndex = %d ",CorespondIndex );
             }
-            /*********************************************************/
+            //printf("\n");
+            H[i] = findHomography(obj[i], scene[i]);
+            obj[i].clear();
+            scene[i].clear();
         }
-        if (H_InlierNumber[i] > Max_InlierNumber)
+
+
+
+        
+        double Candidate[3];
+        //double Candidate[3];
+        Mat TargetKeypoint[key1];
+        double Object_X, Object_Y;
+        double Target_X, Target_Y;
+        double distance;
+
+        int Max_InlierNumber = 0;
+        int Max_InlierIndex = 0;
+
+        cout << "Computing the best Homography using RANSAC" << endl;
+        for (int i = 0; i < 256; ++i)
         {
-            Max_InlierNumber = H_InlierNumber[i];
-            Max_InlierIndex = i;
+            for (int j = 0; j < key1; j++)
+            {
+                Candidate[0] = keypoints1[j].pt.x;
+                Candidate[1] = keypoints1[j].pt.y;
+                Candidate[2] = 1;
+
+                Mat Before(3,1,CV_64FC1,Candidate);
+                TargetKeypoint[j] = H[i]*Before;
+                
+                /****************** Computing inlier using RANSAC ***************/           
+                
+                Target_X = TargetKeypoint[j].at<double>(0,0);
+                Target_Y = TargetKeypoint[j].at<double>(0,1);
+                
+                for (int k = 0; k < key2; k++)
+                {
+                    Object_X = keypoints2[k].pt.x;
+                    Object_Y = keypoints2[k].pt.y;
+                    distance = ComputeDistance(Target_X,Target_Y,Object_X,Object_Y);
+                    //printf("distance = %f \n",distance );
+
+                    if (distance < RANSAC_DISTANCE)
+                    {
+                        H_InlierNumber[i]++;
+                        break;
+                    }
+                }
+                /*********************************************************/
+            }
+
+            if (H_InlierNumber[i] > Max_InlierNumber)
+            {
+                Max_InlierNumber = H_InlierNumber[i];
+                Max_InlierIndex = i;
+            }
+            //printf("H_InlierNumber[%d] = %d\n",i,H_InlierNumber[i]);
+        }
+        //cout << TargetKeypoint[0] << endl; 
+        //cout << TargetKeypoint[0].at<double>(1,0) << endl;
+        //cout << Object[0] << endl;
+
+        printf("the best Candidate Homography[%d] = %d\n",count,Max_InlierNumber );
+        Candidate_H[count] = H[Max_InlierIndex].clone();
+        Candidate_InlierNumber[count] = Max_InlierNumber;
+
+        for (int ii = 0; ii < 4; ++ii)
+        {
+            Candidate_store[count][ii] = store[Max_InlierIndex][ii];
+        }
+        
+        count++;
+    }
+
+    int Max_Candidate_InlierNumber = 0;
+    int Max_Candidate_InlierIndex = 0;
+
+    for (int i = 0; i < ITERATIVE; ++i)
+    {
+        if (Candidate_InlierNumber[i] > Max_Candidate_InlierNumber)
+        {
+            Max_Candidate_InlierNumber = Candidate_InlierNumber[i];
+            Max_Candidate_InlierIndex = i;
         }
     }
-    //cout << TargetKeypoint[0] << endl; 
-    //cout << TargetKeypoint[0].at<double>(1,0) << endl;
-    //cout << Object[0] << endl;
 
-    printf("the best Homography[%d] = %d\n",Max_InlierIndex,Max_InlierNumber );
-    Mat Reconvered_H(H[Max_InlierIndex]);
+    printf("the best candidate H[%d] is : %d \n",Max_Candidate_InlierIndex,Max_Candidate_InlierNumber);
+    printf("store_corespond = %d %d %d %d\n",Candidate_store[Max_Candidate_InlierIndex][0],Candidate_store[Max_Candidate_InlierIndex][1],Candidate_store[Max_Candidate_InlierIndex][2],Candidate_store[Max_Candidate_InlierIndex][3]);
+
+    Mat Reconvered_H(Candidate_H[Max_Candidate_InlierIndex]);
+
+    cout << Reconvered_H << endl;
+
+
+
+
 
 
     //Mat WarpingImage = Mat::zeros(ObjectImage.rows, ObjectImage.cols,CV_8UC3);
@@ -645,6 +751,7 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
     //printf("warping : row = %d, col = %d\n",WarpingImage.rows, WarpingImage.cols );
     printf("Warping\n");
     Mat WarpingPoint;
+    double Candidate[3];
 
     for (int i = 0; i <= ObjectImage.rows-1 ; i++)      //rows
     {
@@ -852,7 +959,7 @@ Mat FirstProcess_Pthread( Mat ObjectImage, Mat TargetImage)
     int Extract = 0;
 
     cout << "computing Homography" << endl;
-    for (int i = 0; i < 256; ++i)
+    /*for (int i = 0; i < 256; ++i)
     {
         for (int j = H_START_NUM; j < H_END_NUM; ++j)
         {
@@ -866,7 +973,26 @@ Mat FirstProcess_Pthread( Mat ObjectImage, Mat TargetImage)
         }
         //printf("\n");
         H[i] = findHomography(obj, scene[i]);
+    }*/
+
+
+    for (int i = 0; i < 256; ++i)
+    {
+        for (int j = 0; j < 4; ++j)
+        {
+            int CorespondIndex = (rand()% key1);
+            IndexForKNN = Extract_Index[i][Extract];
+            IndexForScene = K_NearestNeighbor[CorespondIndex][IndexForKNN];
+            scene[i].push_back( keypoints2[IndexForScene].pt );
+            Extract++;
+            if(Extract > 3)
+                Extract = 0;
+            printf("CorespondIndex = %d ",CorespondIndex );
+        }
+        printf("\n");
+        H[i] = findHomography(obj, scene[i]);
     }
+
 
     cout << "Computing the best Homography using RANSAC" << endl;
 
@@ -901,10 +1027,8 @@ Mat FirstProcess_Pthread( Mat ObjectImage, Mat TargetImage)
     Mat WarpingImage = TargetImage.clone();
     Mat WarpingPoint;
 
-    //printf("object : row = %d, col = %d\n",ObjectImage.rows, ObjectImage.cols );
-    //printf("warping : row = %d, col = %d\n",WarpingImage.rows, WarpingImage.cols );
-    printf("Warping\n");
 
+    printf("Warping\n");
     double Candidate[3];
 
     for (int i = 0; i <= ObjectImage.rows-1 ; i++)      //rows
@@ -1531,14 +1655,14 @@ void* RANSAC_Thread(void* rank)
 int main(int argc, char const *argv[])
 {
     Mat ObjectImage = cv::imread( argv[1], 1 );  //type : 8UC3
-    Mat ObjectImage2 = cv::imread( argv[2], 1 );
-    Mat TargetImage = cv::imread( argv[3], 1 );
+    //Mat ObjectImage2 = cv::imread( argv[2], 1 );
+    Mat TargetImage = cv::imread( argv[2], 1 );
     Mat ResultImage;
     Mat TempImage;
-    int cmd = strtol(argv[4],NULL,10);
+    int cmd = strtol(argv[3],NULL,10);
     double start, end;
     clock_t clock();
-    thread_count = strtol(argv[5],NULL,10);
+    thread_count = strtol(argv[4],NULL,10);
 
     start = clock();
     if (cmd == 1)
@@ -1561,11 +1685,11 @@ int main(int argc, char const *argv[])
         printf("================= using method 2 pthread : %ld ================\n",thread_count);
         ResultImage = SecondProcess_Pthread(ObjectImage, TargetImage);
     }
-    else if(cmd == 5)
+    /*else if(cmd == 5)
     {
         TempImage = FirstProcess_Pthread(ObjectImage, TargetImage);
         ResultImage = SecondProcess_Pthread_v2(ObjectImage2, TargetImage,TempImage);
-    }
+    }*/
 
     imshow("result",ResultImage);
     imwrite( "result.bmp", ResultImage );
