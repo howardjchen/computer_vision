@@ -22,16 +22,37 @@
 #include <omp.h>
 
 #include <string.h>
+#include <time.h>
+
+
+#define src_x1 665
+#define src_y1 23
+#define src_x2 101
+#define src_y2 261
+#define src_x3 261
+#define src_y3 616
+#define src_x4 811
+#define src_y4 364
+
 
 #define K_KNN 4  // k for KNN
 #define RANSAC_DISTANCE 3
-#define ITERATIVE 10
+#define ITERATIVE 1
 
 #define H_START_NUM 0
 #define H_END_NUM 4
 
 #define OBJECT_IMG "object_11.bmp"
 #define TARGET_IMG "object_12.bmp"
+
+#define dst_x1 869
+#define dst_y1 179
+#define dst_x2 247
+#define dst_y2 177
+#define dst_x3 250
+#define dst_y3 574
+#define dst_x4 872
+#define dst_y4 558
  
 long thread_count;
 long long n = 256;
@@ -305,6 +326,7 @@ Mat FirstProcess( Mat ObjectImage, Mat TargetImage)
     int Candidate_InlierNumber[ITERATIVE];
     int store[256][4];
     int Candidate_store[ITERATIVE][4];
+    srand(time(NULL));
 
     while(count < ITERATIVE)
     {
@@ -390,6 +412,7 @@ Mat FirstProcess( Mat ObjectImage, Mat TargetImage)
         //cout << Object[0] << endl;
 
         printf("the best Candidate Homography[%d] = %d\n",count,Max_InlierNumber );
+        printf("store = %d %d %d %d\n",store[Max_InlierIndex][0],store[Max_InlierIndex][1],store[Max_InlierIndex][2],store[Max_InlierIndex][3]);
         Candidate_H[count] = local_H[Max_InlierIndex].clone();
         Candidate_InlierNumber[count] = Max_InlierNumber;
 
@@ -477,6 +500,10 @@ Mat FirstProcess( Mat ObjectImage, Mat TargetImage)
     //imshow("Result",Result);
     //imshow("TargetImage",TargetImage)
 
+    imshow( "feat1.bmp", feat1 );
+    imshow( "feat2.bmp", feat2 );
+
+
     free(K_NearestNeighbor);
     free (KeyPoint_Neighborhood);
 
@@ -512,6 +539,7 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
     drawKeypoints(TargetImage,keypoints2,feat2,Scalar(255, 255, 255),DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
     imwrite( "feat1.bmp", feat1 );
     imwrite( "feat2.bmp", feat2 );
+    //imshow("feat2",feat2);
 
     int key1 = keypoints1.size();   //object
     int key2 = keypoints2.size();   //target
@@ -627,6 +655,8 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
     int store[256][4];
     int Candidate_store[ITERATIVE][4];
 
+    srand(time(NULL));
+
     while(count < ITERATIVE)
     {
         cout << "computing Homography" << endl;
@@ -735,17 +765,35 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
     printf("the best candidate H[%d] is : %d \n",Max_Candidate_InlierIndex,Max_Candidate_InlierNumber);
     printf("store_corespond = %d %d %d %d\n",Candidate_store[Max_Candidate_InlierIndex][0],Candidate_store[Max_Candidate_InlierIndex][1],Candidate_store[Max_Candidate_InlierIndex][2],Candidate_store[Max_Candidate_InlierIndex][3]);
 
-    Mat Reconvered_H(Candidate_H[Max_Candidate_InlierIndex]);
+    //Mat Reconvered_H(Candidate_H[Max_Candidate_InlierIndex]);
+
+    //cout << Reconvered_H << endl;
+
+
+    vector<Point2f> src;
+    src.push_back(Point2f(src_x1,src_y1));
+    src.push_back(Point2f(src_x2,src_y2));
+    src.push_back(Point2f(src_x3,src_y3));
+    src.push_back(Point2f(src_x4,src_y4));
+
+    vector<Point2f> dst;
+    dst.push_back(Point2f(dst_x1,dst_y1));
+    dst.push_back(Point2f(dst_x2,dst_y2));
+    dst.push_back(Point2f(dst_x3,dst_y3));
+    dst.push_back(Point2f(dst_x4,dst_y4));
+
+    Mat Reconvered_H = findHomography(src,dst);
 
     cout << Reconvered_H << endl;
 
-
+    Mat H_inverse = Reconvered_H.inv();
 
 
 
 
     //Mat WarpingImage = Mat::zeros(ObjectImage.rows, ObjectImage.cols,CV_8UC3);
     Mat WarpingImage = TargetImage.clone();
+    Mat WarpingImage_inv = ObjectImage.clone();
 
 
     //printf("object : row = %d, col = %d\n",ObjectImage.rows, ObjectImage.cols );
@@ -754,7 +802,40 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
     Mat WarpingPoint;
     double Candidate[3];
 
-    for (int i = 0; i <= ObjectImage.rows-1 ; i++)      //rows
+    Mat TempImage;
+    warpPerspective(ObjectImage, TempImage, Reconvered_H, TargetImage.size());
+
+    Mat TempImage_inv;
+    warpPerspective(TargetImage,TempImage_inv,H_inverse,ObjectImage.size());
+
+
+    for (int i = 0; i <= TempImage.rows-1 ; i++)      //rows
+    {
+        for (int j = 0; j <= TempImage.cols-1; j++)   //cols
+        {
+            if(TempImage.at<Vec3b>(i,j)[0] != 255 && TempImage.at<Vec3b>(i,j)[1] != 255 && TempImage.at<Vec3b>(i,j)[2] != 255)
+            {
+                if(TempImage.at<Vec3b>(i,j)[0] != 0 && TempImage.at<Vec3b>(i,j)[1] != 0 && TempImage.at<Vec3b>(i,j)[2] != 0)
+                    WarpingImage.at<Vec3b>(i,j) = TempImage.at<Vec3b>(i,j);     
+            }    
+        }
+    }
+
+    for (int i = 0; i <= TempImage_inv.rows-1 ; i++)      //rows
+    {
+        for (int j = 0; j <= TempImage_inv.cols-1; j++)   //cols
+        {
+            if(TempImage_inv.at<Vec3b>(i,j)[0] != 255 && TempImage_inv.at<Vec3b>(i,j)[1] != 255 && TempImage_inv.at<Vec3b>(i,j)[2] != 255)
+            {
+                if(TempImage_inv.at<Vec3b>(i,j)[0] != 0 && TempImage_inv.at<Vec3b>(i,j)[1] != 0 && TempImage_inv.at<Vec3b>(i,j)[2] != 0)
+                    WarpingImage_inv.at<Vec3b>(i,j) = TempImage_inv.at<Vec3b>(i,j);     
+            }    
+        }
+    }
+
+    imshow("backwarping",WarpingImage_inv);
+
+    /*for (int i = 0; i <= ObjectImage.rows-1 ; i++)      //rows
     {
         for (int j = 0; j <= ObjectImage.cols-1; j++)   //cols
         {
@@ -765,13 +846,14 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
                 Candidate[2] = 1;
                 Mat Before(3,1,CV_64FC1,Candidate);
                 WarpingPoint = Reconvered_H*Before;
-                int x = WarpingPoint.at<double>(0,0);
-                int y = WarpingPoint.at<double>(0,1);
+                int u = WarpingPoint.at<double>(0,2);
+                int x = WarpingPoint.at<double>(0,0)/u;
+                int y = WarpingPoint.at<double>(0,1)/u;
                 if ( x >= 0 && y >= 0)
                     WarpingImage.at<Vec3b>(x,y) = ObjectImage.at<Vec3b>(i,j);     
             }    
         }
-    }
+    }*/
 
     /*Mat Result = TargetImage.clone();
     Point2f src_center(WarpingImage.cols/2.0F, WarpingImage.rows/2.0F);
@@ -805,6 +887,8 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
     free(KeyPoint_Neighborhood);
     free(K_NearestNeighbor);
 
+
+    waitKey(0);
     return WarpingImage;
 }
 
@@ -1691,6 +1775,9 @@ int main(int argc, char const *argv[])
         TempImage = FirstProcess_Pthread(ObjectImage, TargetImage);
         ResultImage = SecondProcess_Pthread_v2(ObjectImage2, TargetImage,TempImage);
     }*/
+
+    //imshow("object",ObjectImage);
+    //imshow("target",TargetImage);
 
     imshow("result",ResultImage);
     imwrite( "result.bmp", ResultImage );

@@ -1,0 +1,44 @@
+﻿已經開始建置於 2015/3/31 下午 11:40:05。
+     1>節點 2 (build 目標) 上的專案 "P:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.vcxproj"。
+     1>InitializeBuildStatus:
+         由於指定了 "AlwaysCreate"，因此正在建立 "Debug\hw1.unsuccessfulbuild"。
+       ClCompile:
+         所有輸出都是最新的。
+         C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt hw1.cpp
+         hw1.cpp
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(87): warning C4244: '引數' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(87): warning C4244: '引數' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(91): warning C4244: '引數' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(96): warning C4244: '引數' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(96): warning C4244: '引數' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(103): warning C4244: '引數' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(108): warning C4244: '引數' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(108): warning C4244: '引數' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(113): warning C4244: '引數' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(113): warning C4244: '引數' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(225): warning C4244: '=' : 將 'double' 轉換為 'float'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(244): warning C4244: '=' : 將 'double' 轉換為 'float'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(255): warning C4244: '=' : 將 'double' 轉換為 'float'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(265): warning C4244: '=' : 將 'double' 轉換為 'float'，由於型別不同，可能導致資料遺失
+     1>p:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.cpp(277): warning C4244: '=' : 將 'double' 轉換為 'float'，由於型別不同，可能導致資料遺失
+       ManifestResourceCompile:
+         所有輸出都是最新的。
+       Link:
+         C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"P:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\Debug\hw1.exe" /INCREMENTAL /NOLOGO opencv_core249d.lib opencv_calib3d249d.lib opencv_contrib249d.lib opencv_features2d249d.lib opencv_highgui249d.lib opencv_imgproc249d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\hw1.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"P:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\Debug\hw1.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"P:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\Debug\hw1.lib" /MACHINE:X86 Debug\hw1.exe.embed.manifest.res
+         Debug\hw1.obj
+         Debug\NumericalIntegration.obj
+         Debug\stdafx.obj
+       Manifest:
+         C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\hw1.exe.embed.manifest" /manifest Debug\hw1.exe.intermediate.manifest
+         所有輸出都是最新的。
+       LinkEmbedManifest:
+         所有輸出都是最新的。
+         hw1.vcxproj -> P:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\Debug\hw1.exe
+       FinalizeBuildStatus:
+         正在刪除檔案 "Debug\hw1.unsuccessfulbuild"。
+         正在變更時間戳記 "Debug\hw1.lastbuildstate"。
+     1>專案 "P:\課程文件\碩二上2\電腦視覺\hw1\hw1_兔子\hw1\hw1.vcxproj" (build 目標) 建置完成。
+
+建置成功。
+
+經過時間 00:00:04.22
