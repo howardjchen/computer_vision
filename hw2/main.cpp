@@ -37,7 +37,7 @@
 
 #define K_KNN 4  // k for KNN
 #define RANSAC_DISTANCE 3
-#define ITERATIVE 10
+
 #define HNUMBER 5000
 
 #define H_START_NUM 0
@@ -256,56 +256,22 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
         }
     }
 
-    
-    /*for (size_t i = 0; i < 4; ++i)
-    {
-        cout <<  keypoints1[i].pt.x << " " << keypoints2[i].pt.y << endl;
-    }*/
-
-    /*for (int i = 0; i < key1; ++i)
-    {
-        printf("K_NearestNeighbor[%d] = ",i);
-        for (size_t j = 0; j < K_KNN; ++j)
-            printf(" %d ",K_NearestNeighbor[i][j]);
-        printf("\n");
-    }*/
 
 
     std::vector<Point2f> obj[HNUMBER];
     std::vector<Point2f> scene[HNUMBER];
-
-
     int Extract_Index[HNUMBER][4];
     int m = 0;
     int IndexForKNN;
     int IndexForScene; 
     int H_InlierNumber[HNUMBER];
-
     memset(H_InlierNumber,0,sizeof(int));
-
-
-
-    /*cout << "arrange the index of neighbors from KNN" << endl;
-    for (int i= 0; i < 4; ++i)
-        for (int j = 0; j < 4; ++j)
-            for (int k = 0; k < 4; ++k)
-                for( int l = 0; l < 4 ; l++ )
-                {
-                    Extract_Index[m][0] = i;
-                    Extract_Index[m][1] = j;
-                    Extract_Index[m][2] = k;
-                    Extract_Index[m][3] = l;
-                    m++;
-                }*/
-
-
     Mat H[HNUMBER];
-
     int count = 0;
     int store[HNUMBER][4];
     int Candidate_store[ITERATIVE][4];
-
     srand(time(NULL));
+
 
     cout << "computing Homography" << endl;
     for (int i = 0; i < HNUMBER; ++i)
@@ -315,7 +281,7 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
             int CorespondIndex = (rand()% key1);
             store[i][j] = CorespondIndex;
 
-            IndexForScene = K_NearestNeighbor[CorespondIndex][rand()% 4];
+            IndexForScene = K_NearestNeighbor[CorespondIndex][rand()% 2];
             scene[i].push_back( keypoints2[IndexForScene].pt );
             obj[i].push_back( keypoints1[CorespondIndex].pt );
         }
@@ -372,78 +338,66 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
     }
 
 
-        Mat Candidate_H;
-        int Candidate_InlierNumber;
+    Mat Candidate_H;
+    int Candidate_InlierNumber;
 
-        printf("the best Candidate Homography[%d] inliernumber = %d\n",Max_InlierIndex , Max_InlierNumber );
-        Candidate_H = H[Max_InlierIndex].clone();
-        Candidate_InlierNumber = Max_InlierNumber;
+    printf("the best Candidate Homography[%d] inliernumber = %d\n",Max_InlierIndex , Max_InlierNumber );
 
-        cout << Candidate_H << endl;
+    Candidate_H = H[Max_InlierIndex].clone();
+    Candidate_InlierNumber = Max_InlierNumber;
 
-        /*for (int ii = 0; ii < 4; ++ii)
-        {
-            Candidate_store[count][ii] = store[Max_InlierIndex][ii];
-        }
-        count++;
-    }
+    cout << Candidate_H << endl;
 
-    int Max_Candidate_InlierNumber;
-    int Max_Candidate_InlierIndex;
-    Max_Candidate_InlierIndex = 0;
-    Max_Candidate_InlierNumber = 0;
-
-
-    for (int i = 0; i < ITERATIVE; ++i)
-    {
-        if (Candidate_InlierNumber[i] > Max_Candidate_InlierNumber)
-        {
-            Max_Candidate_InlierNumber = Candidate_InlierNumber[i];
-            Max_Candidate_InlierIndex = i;
-        }
-    }
-
-    printf("the best candidate H[%d] is : %d \n",Max_Candidate_InlierIndex,Max_Candidate_InlierNumber);
-    printf("store_corespond = %d %d %d %d\n",Candidate_store[Max_Candidate_InlierIndex][0],Candidate_store[Max_Candidate_InlierIndex][1],Candidate_store[Max_Candidate_InlierIndex][2],Candidate_store[Max_Candidate_InlierIndex][3]);
-*/
     vector<Point2f> src;
     vector<Point2f> dst;
     int inliercount = 0;
+    Mat amature_H;
+    int icp = 0;
 
-    for (int j = 0; j < key1; j++)
+    while(icp < 3)
     {
-        Candidate[0] = keypoints1[j].pt.x;
-        Candidate[1] = keypoints1[j].pt.y;
-        Candidate[2] = 1;
+        amature_H = Candidate_H.clone();
+        src.clear();
+        dst.clear();
+        inliercount = 0;
 
-        Mat Beforee(3,1,CV_64FC1,Candidate);
-        TargetKeypoint[j] = Candidate_H * Beforee;            
-        Target_X = TargetKeypoint[j].at<double>(0,0);
-        Target_Y = TargetKeypoint[j].at<double>(0,1);
-        
-        for (int k = 0; k < key2; k++)
+        for (int j = 0; j < key1; j++)
         {
-            Object_X = keypoints2[k].pt.x;
-            Object_Y = keypoints2[k].pt.y;
-            distance = ComputeDistance(Target_X,Target_Y,Object_X,Object_Y);
+            Candidate[0] = keypoints1[j].pt.x;
+            Candidate[1] = keypoints1[j].pt.y;
+            Candidate[2] = 1;
 
-            if (distance < RANSAC_DISTANCE)
+            Mat Beforee(3,1,CV_64FC1,Candidate);
+            TargetKeypoint[j] = amature_H * Beforee;            
+            Target_X = TargetKeypoint[j].at<double>(0,0);
+            Target_Y = TargetKeypoint[j].at<double>(0,1);
+            
+            for (int k = 0; k < key2; k++)
             {
-                src.push_back(keypoints1[j].pt);
-                dst.push_back(keypoints2[k].pt);
-                inliercount++;
-                break;
+                Object_X = keypoints2[k].pt.x;
+                Object_Y = keypoints2[k].pt.y;
+                distance = ComputeDistance(Target_X,Target_Y,Object_X,Object_Y);
+
+                if (distance < RANSAC_DISTANCE)
+                {
+                    src.push_back(keypoints1[j].pt);
+                    dst.push_back(keypoints2[k].pt);
+                    inliercount++;
+                    break;
+                }
             }
         }
+        Candidate_H = findHomography(src,dst);
+        cout << "inliercount = "<< inliercount << endl;
+        icp++;
     }
 
-    cout << "inliercount = "<< inliercount << endl;
-    Mat Reconvered_H = findHomography(src, dst);
-    cout << "final reconvered = " << Reconvered_H << endl;
+    Mat Reconvered_H = Candidate_H.clone();
+    cout << Reconvered_H << endl;
+    Mat H_inverse = Reconvered_H.inv();
 
-
-
-    /*vector<Point2f> src;
+/*
+    vector<Point2f> src;
     src.push_back(Point2f(src_x1,src_y1));
     src.push_back(Point2f(src_x2,src_y2));
     src.push_back(Point2f(src_x3,src_y3));
@@ -456,11 +410,48 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
     dst.push_back(Point2f(dst_x4,dst_y4));
 
     Mat Reconvered_H = findHomography(src,dst);
-
-    cout << Reconvered_H << endl;*/
-
+    cout << Reconvered_H << endl;
     Mat H_inverse = Reconvered_H.inv();
 
+
+    int inliercount = 0;
+    double Candidate[3];
+    Mat TargetKeypoint[key1];
+    double Object_X, Object_Y;
+    double Target_X, Target_Y;
+    double distance;
+    int Max_InlierNumber;
+    int Max_InlierIndex;
+
+    Max_InlierNumber = 0;
+    Max_InlierIndex = 0;
+    for (int j = 0; j < key1; j++)
+    {
+        Candidate[0] = keypoints1[j].pt.x;
+        Candidate[1] = keypoints1[j].pt.y;
+        Candidate[2] = 1;
+
+        Mat Beforee(3,1,CV_64FC1,Candidate);
+        TargetKeypoint[j] = Reconvered_H * Beforee;            
+        Target_X = TargetKeypoint[j].at<double>(0,0);
+        Target_Y = TargetKeypoint[j].at<double>(0,1);
+        
+        for (int k = 0; k < key2; k++)
+        {
+            Object_X = keypoints2[k].pt.x;
+            Object_Y = keypoints2[k].pt.y;
+            distance = ComputeDistance(Target_X,Target_Y,Object_X,Object_Y);
+
+            if (distance < RANSAC_DISTANCE)
+            {
+                inliercount++;
+                break;
+            }
+        }
+    }
+    cout << "inliercount = "<< inliercount << endl;
+    cout << "final reconvered = " << Reconvered_H << endl;
+*/
 
 
 
@@ -595,7 +586,6 @@ int main(int argc, char const *argv[])
     double start, end;
     clock_t clock();
     //thread_count = strtol(argv[4],NULL,10);
-    cout << argv[1] << endl;
     start = clock();
 
     ResultImage = SecondProcess(ObjectImage,TargetImage);
@@ -627,7 +617,7 @@ int main(int argc, char const *argv[])
     //imshow("target",TargetImage);
 
     //imshow("result",ResultImage);
-    imwrite( "result2.bmp", ResultImage );
+    imwrite( "result_now.bmp", ResultImage );
 
     end = clock();
     printf("the time elasped = %f s\n",(end-start)/CLOCKS_PER_SEC);
