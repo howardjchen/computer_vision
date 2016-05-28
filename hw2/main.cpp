@@ -38,7 +38,7 @@
 #define K_KNN 4  // k for KNN
 #define RANSAC_DISTANCE 3
 
-#define HNUMBER 50
+#define HNUMBER 5
 
 #define H_START_NUM 0
 #define H_END_NUM 4
@@ -302,6 +302,7 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
     Max_InlierIndex = 0;
 
     cout << "Computing the best Homography using RANSAC" << endl;
+    memset(H_InlierNumber,0,sizeof(int));
     for (int i = 0; i < HNUMBER; ++i)
     {
         for (int j = 0; j < key1; j++)
@@ -354,7 +355,7 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
     Mat amature_H;
     int icp = 0;
 
-    while(icp < 3)
+    while(icp < 1)
     {
         amature_H = Candidate_H.clone();
         src.clear();
@@ -631,7 +632,7 @@ int main(int argc, char const *argv[])
     //imshow("object",ObjectImage);
     //imshow("target",TargetImage);
 
-    //imshow("result",ResultImage);
+   // imshow("result",ResultImage);
     imwrite( "result_now.bmp", ResultImage );
 
     end = clock();
