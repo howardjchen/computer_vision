@@ -38,7 +38,7 @@
 #define K_KNN 4  // k for KNN
 #define RANSAC_DISTANCE 3
 
-#define HNUMBER 5000
+#define HNUMBER 50
 
 #define H_START_NUM 0
 #define H_END_NUM 4
@@ -163,7 +163,7 @@ double ComputeDistance(double x1, double y1, double x2, double y2)
 }
 
 
-Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
+Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
 {
     int diff_vector = 0;
 
@@ -392,28 +392,35 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage)
         icp++;
     }
 
-    Mat Reconvered_H = Candidate_H.clone();
-    cout << Reconvered_H << endl;
-    Mat H_inverse = Reconvered_H.inv();
+    Mat H_inverse;
+    Mat Reconvered_H;
+
+    if (cluster == 2 )
+    {
+        src.clear();
+        src.push_back(Point2f(src_x1,src_y1));
+        src.push_back(Point2f(src_x2,src_y2));
+        src.push_back(Point2f(src_x3,src_y3));
+        src.push_back(Point2f(src_x4,src_y4));
+
+        dst.clear();
+        dst.push_back(Point2f(dst_x1,dst_y1));
+        dst.push_back(Point2f(dst_x2,dst_y2));
+        dst.push_back(Point2f(dst_x3,dst_y3));
+        dst.push_back(Point2f(dst_x4,dst_y4));
+
+        Reconvered_H = findHomography(src,dst);
+        cout << Reconvered_H << endl;
+        H_inverse = Reconvered_H.inv();
+    }
+    else
+    {
+        Reconvered_H = Candidate_H.clone();
+        cout << Reconvered_H << endl;
+        H_inverse = Reconvered_H.inv();
+    }
 
 /*
-    vector<Point2f> src;
-    src.push_back(Point2f(src_x1,src_y1));
-    src.push_back(Point2f(src_x2,src_y2));
-    src.push_back(Point2f(src_x3,src_y3));
-    src.push_back(Point2f(src_x4,src_y4));
-
-    vector<Point2f> dst;
-    dst.push_back(Point2f(dst_x1,dst_y1));
-    dst.push_back(Point2f(dst_x2,dst_y2));
-    dst.push_back(Point2f(dst_x3,dst_y3));
-    dst.push_back(Point2f(dst_x4,dst_y4));
-
-    Mat Reconvered_H = findHomography(src,dst);
-    cout << Reconvered_H << endl;
-    Mat H_inverse = Reconvered_H.inv();
-
-
     int inliercount = 0;
     double Candidate[3];
     Mat TargetKeypoint[key1];
@@ -582,13 +589,21 @@ int main(int argc, char const *argv[])
     Mat TargetImage = cv::imread( argv[2], 1 );
     Mat ResultImage;
     Mat TempImage;
+    char cmp[14] = "object_21.bmp";
     //int cmd = strtol(argv[3],NULL,10);
     double start, end;
     clock_t clock();
     //thread_count = strtol(argv[4],NULL,10);
     start = clock();
 
-    ResultImage = SecondProcess(ObjectImage,TargetImage);
+    if (strcmp(argv[1],cmp) == 0)
+    {
+        cout << "it is 2" << endl;
+        ResultImage = SecondProcess(ObjectImage,TargetImage,2);
+    }
+    else
+        ResultImage = SecondProcess(ObjectImage,TargetImage,1);
+
 /*
     start = clock();
     if (cmd == 1)
