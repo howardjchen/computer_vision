@@ -36,9 +36,9 @@
 
 
 #define K_KNN 4  // k for KNN
-#define RANSAC_DISTANCE 3
+#define RANSAC_DISTANCE 1
 
-#define HNUMBER 5
+#define HNUMBER 5000
 
 #define H_START_NUM 0
 #define H_END_NUM 4
@@ -265,7 +265,7 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
     int IndexForKNN;
     int IndexForScene; 
     int H_InlierNumber[HNUMBER];
-    memset(H_InlierNumber,0,sizeof(int));
+    //memset(H_InlierNumber,0,sizeof(int));
     Mat H[HNUMBER];
     int count = 0;
     int store[HNUMBER][4];
@@ -302,9 +302,9 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
     Max_InlierIndex = 0;
 
     cout << "Computing the best Homography using RANSAC" << endl;
-    memset(H_InlierNumber,0,sizeof(int));
     for (int i = 0; i < HNUMBER; ++i)
     {
+        H_InlierNumber[i] = 0;
         for (int j = 0; j < key1; j++)
         {
             Candidate[0] = keypoints1[j].pt.x;
@@ -354,7 +354,10 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
     int inliercount = 0;
     Mat amature_H;
     int icp = 0;
+    Mat drawobject = ObjectImage.clone();
+    Mat drawtarget = TargetImage.clone();
 
+    cout << "Homograpy final refinment" << endl;
     while(icp < 1)
     {
         amature_H = Candidate_H.clone();
@@ -379,7 +382,7 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
                 Object_Y = keypoints2[k].pt.y;
                 distance = ComputeDistance(Target_X,Target_Y,Object_X,Object_Y);
 
-                if (distance < RANSAC_DISTANCE)
+                if (distance < 1)
                 {
                     src.push_back(keypoints1[j].pt);
                     dst.push_back(keypoints2[k].pt);
@@ -388,6 +391,12 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
                 }
             }
         }
+        for (int i = 0; i < src.size(); i++)
+        {
+            circle(drawobject,cvPoint(src[i].x,src[i].y),10,CV_RGB(0,255,0),2,8,0);
+            circle(drawtarget,cvPoint(dst[i].x,dst[i].y),10,CV_RGB(0,255,0),2,8,0);
+        }
+        
         Candidate_H = findHomography(src,dst);
         cout << "inliercount = "<< inliercount << endl;
         icp++;
@@ -396,7 +405,7 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
     Mat H_inverse;
     Mat Reconvered_H;
 
-    if (cluster == 2 )
+    /*if (cluster == 2 )
     {
         src.clear();
         src.push_back(Point2f(src_x1,src_y1));
@@ -414,12 +423,30 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
         cout << Reconvered_H << endl;
         H_inverse = Reconvered_H.inv();
     }
-    else
+    else if (cluster == 3)
     {
-        Reconvered_H = Candidate_H.clone();
+        src.clear();
+        src.push_back(Point2f(src_x3,src_y3));
+        src.push_back(Point2f(src_x4,src_y4));
+        src.push_back(Point2f(src_x1,src_y1));
+        src.push_back(Point2f(src_x2,src_y2));
+
+        dst.clear();
+        dst.push_back(Point2f(dst_x1,dst_y1));
+        dst.push_back(Point2f(dst_x2,dst_y2));
+        dst.push_back(Point2f(dst_x3,dst_y3));
+        dst.push_back(Point2f(dst_x4,dst_y4));
+
+        Reconvered_H = findHomography(src,dst);
         cout << Reconvered_H << endl;
         H_inverse = Reconvered_H.inv();
     }
+    else
+    {*/
+        Reconvered_H = Candidate_H.clone();
+        cout << Reconvered_H << endl;
+        H_inverse = Reconvered_H.inv();
+    //}
 
 /*
     int inliercount = 0;
@@ -525,6 +552,9 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
         }
     }*/
 
+    imshow("drawobject",drawobject);
+    imshow("drawtarget",drawtarget);
+
     free(KeyPoint_Neighborhood);
     free(K_NearestNeighbor);
 
@@ -591,6 +621,7 @@ int main(int argc, char const *argv[])
     Mat ResultImage;
     Mat TempImage;
     char cmp[14] = "object_21.bmp";
+    char cmp2[14] = "object_22.bmp";
     //int cmd = strtol(argv[3],NULL,10);
     double start, end;
     clock_t clock();
@@ -599,8 +630,11 @@ int main(int argc, char const *argv[])
 
     if (strcmp(argv[1],cmp) == 0)
     {
-        cout << "it is 2" << endl;
         ResultImage = SecondProcess(ObjectImage,TargetImage,2);
+    }
+    else if (strcmp(argv[1],cmp2) == 0)
+    {
+        ResultImage = SecondProcess(ObjectImage,TargetImage,3);
     }
     else
         ResultImage = SecondProcess(ObjectImage,TargetImage,1);
@@ -632,7 +666,7 @@ int main(int argc, char const *argv[])
     //imshow("object",ObjectImage);
     //imshow("target",TargetImage);
 
-   // imshow("result",ResultImage);
+    imshow("result",ResultImage);
     imwrite( "result_now.bmp", ResultImage );
 
     end = clock();
