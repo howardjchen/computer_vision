@@ -25,20 +25,20 @@
 #include <time.h>
 
 
-#define src_x1 278
-#define src_y1 138
-#define src_x2 760
-#define src_y2 145
-#define src_x3 762
-#define src_y3 509
-#define src_x4 273
-#define src_y4 509
+#define src_x1 665
+#define src_y1 23
+#define src_x2 101
+#define src_y2 261
+#define src_x3 261
+#define src_y3 616
+#define src_x4 811
+#define src_y4 364
 
 
 #define K_KNN 4  // k for KNN
 #define RANSAC_DISTANCE 2
 
-#define HNUMBER 50
+#define HNUMBER 5000
 
 #define H_START_NUM 0
 #define H_END_NUM 4
@@ -46,14 +46,14 @@
 #define OBJECT_IMG "object_11.bmp"
 #define TARGET_IMG "object_12.bmp"
 
-#define dst_x1 652
-#define dst_y1 110
-#define dst_x2 652
-#define dst_y2 471
-#define dst_x3 376
-#define dst_y3 471
-#define dst_x4 376
-#define dst_y4 110
+#define dst_x1 869
+#define dst_y1 179
+#define dst_x2 247
+#define dst_y2 177
+#define dst_x3 250
+#define dst_y3 574
+#define dst_x4 872
+#define dst_y4 558
  
 long thread_count;
 long long n = 256;
@@ -405,8 +405,7 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
     Mat H_inverse;
     Mat Reconvered_H;
 
-
-    if (cluster == 2)
+    if (cluster == 2 )
     {
         src.clear();
         src.push_back(Point2f(src_x1,src_y1));
@@ -419,6 +418,42 @@ Mat SecondProcess( Mat ObjectImage, Mat TargetImage,int cluster)
         dst.push_back(Point2f(dst_x2,dst_y2));
         dst.push_back(Point2f(dst_x3,dst_y3));
         dst.push_back(Point2f(dst_x4,dst_y4));
+
+        Reconvered_H = findHomography(src,dst);
+        cout << Reconvered_H << endl;
+        H_inverse = Reconvered_H.inv();
+    }
+    else if (cluster == 3)
+    {
+        src.clear();
+        src.push_back(Point2f(src_x3,src_y3));
+        src.push_back(Point2f(src_x4,src_y4));
+        src.push_back(Point2f(src_x1,src_y1));
+        src.push_back(Point2f(src_x2,src_y2));
+
+        dst.clear();
+        dst.push_back(Point2f(dst_x1,dst_y1));
+        dst.push_back(Point2f(dst_x2,dst_y2));
+        dst.push_back(Point2f(dst_x3,dst_y3));
+        dst.push_back(Point2f(dst_x4,dst_y4));
+
+        Reconvered_H = findHomography(src,dst);
+        cout << Reconvered_H << endl;
+        H_inverse = Reconvered_H.inv();
+    }
+    else if (cluster == 4)
+    {
+        src.clear();
+        src.push_back(Point2f(278,138));
+        src.push_back(Point2f(760,148));
+        src.push_back(Point2f(762,509));
+        src.push_back(Point2f(273,509));
+
+        dst.clear();
+        dst.push_back(Point2f(652,110));
+        dst.push_back(Point2f(654,471));
+        dst.push_back(Point2f(376,471));
+        dst.push_back(Point2f(370,109));
 
         Reconvered_H = findHomography(src,dst);
         cout << Reconvered_H << endl;
@@ -603,13 +638,25 @@ int main(int argc, char const *argv[])
     Mat TargetImage = cv::imread( argv[2], 1 );
     Mat ResultImage;
     Mat TempImage;
-    char cmp[11] = "object.bmp";
+    char cmp[14] = "object_21.bmp";
+    char cmp2[14] = "object_22.bmp";
+    char cmp3[11] = "object.bmp";
     double start, end;
     clock_t clock();
     start = clock();
 
     if (strcmp(argv[1],cmp) == 0)
+    {
         ResultImage = SecondProcess(ObjectImage,TargetImage,2);
+    }
+    else if (strcmp(argv[1],cmp2) == 0)
+    {
+        ResultImage = SecondProcess(ObjectImage,TargetImage,3);
+    }
+    else if(strcmp(argv[1],cmp3) == 0)
+    {
+        ResultImage = SecondProcess(ObjectImage,TargetImage,4);
+    }
     else
         ResultImage = SecondProcess(ObjectImage,TargetImage,1);
 
