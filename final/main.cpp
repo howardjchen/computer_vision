@@ -12,8 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <opencv2/legacy/legacy.hpp>
-#include <opencv2/nonfree/nonfree.hpp>
-#include <opencv2/nonfree/features2d.hpp>
+//#include <opencv2/nonfree/nonfree.hpp>
+//#include <opencv2/nonfree/features2d.hpp>
 #include <opencv2/core/core.hpp> // imread
 #include <time.h>
 
@@ -62,37 +62,13 @@ int main( int argc, const char** argv )
     if( !face_cascade.load( face_cascade_name ) ){ printf("--(!)Error loading\n"); return -1; };
     if( !eyes_cascade.load( eyes_cascade_name ) ){ printf("--(!)Error loading\n"); return -1; };
 
-    //-- 2. Read the video stream
-    /*capture = cvCaptureFromCAM( -1 );
-    if( capture )
-    {
-        while( true )
-        {
-            frame = cvQueryFrame( capture );
-
-            //-- 3. Apply the classifier to the frame
-            if( !frame.empty() )
-            { 
-                detectAndDisplay( frame ); 
-            }
-            else
-            { 
-                printf(" --(!) No captured frame -- Break!"); break; 
-            }
-
-            int c = waitKey(10);
-            if( (char)c == 'c' )
-            { 
-                break; 
-            }
-        }
-    }*/
-
 
     //-- 3. REad form image
     frame = imread( argv[1] ,1);
     if( !frame.empty() )
     { 
+        imwrite("/Users/chungyunhsiao/Documents/MATLAB/final/AllData/TestData/TestImage.jpg",frame);
+        imwrite("TestImage.jpg",frame);
         detectAndDisplay( frame ); 
         end = clock();
     }
@@ -103,7 +79,7 @@ int main( int argc, const char** argv )
 
     printf("execution time = %f\n", (end - start)/CLOCKS_PER_SEC );
 
-    waitKey(0);
+   // waitKey(0);
 
     return 0;
 }
@@ -112,9 +88,11 @@ int main( int argc, const char** argv )
 void detectAndDisplay( Mat frame )
 {
     FILE *fpout;
+    FILE *ftemp;
     std::vector<Rect> faces;
     Mat frame_gray;
 
+    //fpout = fopen("/Users/chungyunhsiao/Documents/MATLAB/final/AllData/TestData/data.txt","w");
     fpout = fopen("data.txt","w");
 
     cvtColor( frame, frame_gray, CV_BGR2GRAY );
@@ -122,37 +100,6 @@ void detectAndDisplay( Mat frame )
 
     //-- Detect faces
     face_cascade.detectMultiScale( frame_gray, faces, 1.1, 2, 0|CV_HAAR_SCALE_IMAGE, Size(30, 30) );
-
-    /*for( size_t i = 0; i < faces.size(); i++ )
-    {
-        Point center( faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5 );
-        ellipse(    
-                    frame,  
-                    center, 
-                    Size( faces[i].width*0.5, faces[i].height*0.5), 
-                    0,          
-                    0,          
-                    360, 
-                    Scalar( 0, 0, 255 ), 
-                    4, 
-
-                    8, 
-                    0 );
-
-        /*Mat faceROI = frame_gray( faces[i] );
-        std::vector<Rect> eyes;
-
-        //-- In each face, detect eyes
-        eyes_cascade.detectMultiScale( faceROI, eyes, 1.1, 2, 0 |CV_HAAR_SCALE_IMAGE, Size(30, 30) );
-
-        for( size_t j = 0; j < eyes.size(); j++ )
-        {
-            Point center( faces[i].x + eyes[j].x + eyes[j].width*0.5, faces[i].y + eyes[j].y + eyes[j].height*0.5 );
-            int radius = cvRound( (eyes[j].width + eyes[j].height)*0.25 );
-            circle( frame, center, radius, Scalar( 255, 0, 0 ), 4, 8, 0 );
-        }
-    }*/
-
 
 
     for( size_t i = 0; i < faces.size(); i++ )
@@ -190,7 +137,7 @@ void detectAndDisplay( Mat frame )
     }
 
     cout << "Number of faces being detected = " << faces.size() << endl;
-
-    imshow( window_name, frame );
-    imwrite("output.jpg", frame);
+    //ftemp = fopen("/Users/chungyunhsiao/Documents/MATLAB/final/AllData/TestData/temp.txt","w");
+   // imshow( window_name, frame );
+   // imwrite("output.jpg", frame);
  }
