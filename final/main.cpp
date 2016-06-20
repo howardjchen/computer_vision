@@ -49,9 +49,11 @@ int main( int argc, const char** argv )
     if(cmd == 1)
         face_cascade_name = "traincascade/cascade.xml";             
     else if(cmd == 2)
-        face_cascade_name = "haarcascade_cat.xml";               
+        face_cascade_name = "haarcascade_final2.xml";               
     else if(cmd == 3)
-        face_cascade_name = "thaarcascade_frontalface_alt.xml";                   
+        face_cascade_name = "haarcascade_frontalface_alt.xml"; 
+    else if(cmd == 4)
+        face_cascade_name = "traincascade_final2/cascade.xml";                  
 
 
     start = clock();
@@ -133,6 +135,7 @@ void detectAndDisplay( Mat frame )
                     360, 
                     Scalar( 0, 0, 255 ), 
                     4, 
+
                     8, 
                     0 );
 
@@ -150,11 +153,15 @@ void detectAndDisplay( Mat frame )
         }
     }*/
 
+
+
     for( size_t i = 0; i < faces.size(); i++ )
     {
-        Point point1(faces[i].x, faces[i].y);
-        Point point2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
-        rectangle(
+        if(i == 0)
+        {    
+            Point point1(faces[i].x-10, faces[i].y-30);
+            Point point2(faces[i].x + faces[i].width+20, faces[i].y + faces[i].height+10);
+            rectangle(
                     frame,
                     point1,
                     point2,
@@ -162,8 +169,24 @@ void detectAndDisplay( Mat frame )
                     2,
                     8,
                     0 );
-        printf("faces[%ld] = ( %d , %d ) %d %d  \n",i,faces[i].x, faces[i].y, faces[i].width, faces[i].height );
-        fprintf(fpout, "%d %d %d %d \n",faces[i].x, faces[i].y, faces[i].width, faces[i].height ); 
+            printf("faces[%ld] = ( %d , %d ) %d %d  \n",i,faces[i].x-10, faces[i].y-30, faces[i].width+20, faces[i].height+10 );
+            fprintf(fpout, "%d %d %d %d \n",faces[i].x-10, faces[i].y-30, faces[i].width+20, faces[i].height+10 ); 
+        }
+        else
+        {
+            Point point1(faces[i].x, faces[i].y);
+            Point point2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
+            rectangle(
+                        frame,
+                        point1,
+                        point2,
+                        Scalar( 255, 0, 255 ),
+                        2,
+                        8,
+                        0 );
+            printf("faces[%ld] = ( %d , %d ) %d %d  \n",i,faces[i].x, faces[i].y, faces[i].width, faces[i].height );
+            fprintf(fpout, "%d %d %d %d \n",faces[i].x, faces[i].y, faces[i].width, faces[i].height ); 
+        }
     }
 
     cout << "Number of faces being detected = " << faces.size() << endl;
