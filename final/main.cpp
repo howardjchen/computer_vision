@@ -11,7 +11,7 @@
  
 #include <stdio.h>
 #include <stdlib.h>
-#include <opencv2/legacy/legacy.hpp>
+//#include <opencv2/legacy/legacy.hpp>
 //#include <opencv2/nonfree/nonfree.hpp>
 //#include <opencv2/nonfree/features2d.hpp>
 #include <opencv2/core/core.hpp> // imread
@@ -67,8 +67,8 @@ int main( int argc, const char** argv )
     frame = imread( argv[1] ,1);
     if( !frame.empty() )
     { 
-        imwrite("/Users/chungyunhsiao/Documents/MATLAB/final/AllData/TestData/TestImage.jpg",frame);
-        imwrite("TestImage.jpg",frame);
+       // imwrite("/Users/chungyunhsiao/Documents/MATLAB/final/AllData/TestData/TestImage.jpg",frame);
+       // imwrite("TestImage.jpg",frame);
         detectAndDisplay( frame ); 
         end = clock();
     }
@@ -116,8 +116,8 @@ void detectAndDisplay( Mat frame )
                     2,
                     8,
                     0 );
-            printf("faces[%ld] = ( %d , %d ) %d %d  \n",i,faces[i].x-10, faces[i].y-30, faces[i].width+20, faces[i].height+10 );
-            fprintf(fpout, "%d %d %d %d \n",faces[i].x-10, faces[i].y-30, faces[i].width+20, faces[i].height+10 ); 
+            printf("faces[%ld] = ( %d , %d ) %d %d  \n",i,faces[i].x-10, faces[i].y-30, faces[i].width+30, faces[i].height+40 );
+            fprintf(fpout, "%d %d %d %d \n",faces[i].x-10, faces[i].y-30, faces[i].width+30, faces[i].height+40 ); 
         }
         else
         {
@@ -137,7 +137,7 @@ void detectAndDisplay( Mat frame )
     }
 
     cout << "Number of faces being detected = " << faces.size() << endl;
-    //ftemp = fopen("/Users/chungyunhsiao/Documents/MATLAB/final/AllData/TestData/temp.txt","w");
+   // ftemp = fopen("/Users/chungyunhsiao/Documents/MATLAB/final/AllData/TestData/temp.txt","w");
    // imshow( window_name, frame );
-   // imwrite("output.jpg", frame);
+    imwrite("output.jpg", frame);
  }
