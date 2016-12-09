@@ -1,5 +1,4 @@
-# NCTU ICSE 2015 Spring
-# Computer Vision
+# NCTU ICSE 2015 Spring, Computer Vision
 
 This repository contains my two homework and the final project which is about cat face recognition using haar-like feature with adaboost and SVM algo.
 
